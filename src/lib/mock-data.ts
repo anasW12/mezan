@@ -1,0 +1,299 @@
+import type {
+  AuditLogEntry,
+  CompanyTenantRow,
+  ExpenseRow,
+  KpiSummary,
+  Product,
+  PurchaseInvoiceRow,
+  SafeAccount,
+  SalesInvoiceRow,
+  WithdrawalRow,
+} from "@/types";
+
+export const INITIAL_KPIS: KpiSummary = {
+  cashbox: 45000,
+  inventoryValue: 123000,
+  fixedAssets: 50000,
+  generalExpenses: 8500,
+  netProfit: 28500,
+  fundsUnderCollection: 4500,
+  ownerWithdrawals: 2000,
+};
+
+export const INITIAL_SAFES: SafeAccount[] = [
+  { id: "safe-1", name: "الخزينة الرئيسية", balance: 32500, isDefault: true },
+  { id: "safe-2", name: "حساب إنستا باي / البنك", balance: 12500, isDefault: false },
+];
+
+export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: "prod-1",
+    name: "تيشيرت قطن أوفرسايز",
+    sku: "TSH-001",
+    stockQuantity: 8,
+    averageCostPrice: 45,
+    sellingPrice: 150,
+  },
+  {
+    id: "prod-2",
+    name: "بنطلون جينز سليم فيت",
+    sku: "PNT-014",
+    stockQuantity: 150,
+    averageCostPrice: 120,
+    sellingPrice: 350,
+  },
+  {
+    id: "prod-3",
+    name: "حزام جلد طبيعي",
+    sku: "BLT-008",
+    stockQuantity: 200,
+    averageCostPrice: 25,
+    sellingPrice: 80,
+  },
+  {
+    id: "prod-4",
+    name: "هودي شتوي مبطن",
+    sku: "HOD-022",
+    stockQuantity: 6,
+    averageCostPrice: 185,
+    sellingPrice: 420,
+  },
+  {
+    id: "prod-5",
+    name: "كاب رياضي كلاسيك",
+    sku: "CAP-005",
+    stockQuantity: 92,
+    averageCostPrice: 35,
+    sellingPrice: 110,
+  },
+];
+
+export const INITIAL_SALES: SalesInvoiceRow[] = [
+  {
+    id: "sale-1",
+    invoiceNumber: "#1042",
+    date: "٢٦ نوفمبر ٢٠٢٦",
+    itemsSummary: "٢× تيشيرت قطن أوفرسايز",
+    directCost: 50,
+    totalAmount: 350,
+    paymentStatus: "PAID",
+  },
+  {
+    id: "sale-2",
+    invoiceNumber: "#1041",
+    date: "٢٥ نوفمبر ٢٠٢٦",
+    itemsSummary: "١× بنطلون جينز سليم فيت",
+    directCost: 40,
+    totalAmount: 390,
+    paymentStatus: "PENDING_COLLECTION",
+  },
+  {
+    id: "sale-3",
+    invoiceNumber: "#1040",
+    date: "٢٥ نوفمبر ٢٠٢٦",
+    itemsSummary: "٣× حزام جلد طبيعي",
+    directCost: 0,
+    totalAmount: 240,
+    paymentStatus: "PENDING_COLLECTION",
+  },
+  {
+    id: "sale-4",
+    invoiceNumber: "#1039",
+    date: "٢٤ نوفمبر ٢٠٢٦",
+    itemsSummary: "٤× هودي شتوي مبطن",
+    directCost: 65,
+    totalAmount: 1680,
+    paymentStatus: "PAID",
+  },
+];
+
+export const INITIAL_PURCHASES: PurchaseInvoiceRow[] = [
+  {
+    id: "pur-1",
+    invoiceNumber: "#P-208",
+    date: "٢٦ نوفمبر ٢٠٢٦",
+    supplierName: "مصنع النيل للمنسوجات",
+    safeName: "الخزينة الرئيسية",
+    itemsSummary: "١٠٠× تيشيرت قطن أوفرسايز",
+    totalAmount: 4500,
+  },
+  {
+    id: "pur-2",
+    invoiceNumber: "#P-207",
+    date: "٢٢ نوفمبر ٢٠٢٦",
+    supplierName: "شركة الدلتا جينز",
+    safeName: "حساب إنستا باي / البنك",
+    itemsSummary: "٥٠× بنطلون جينز سليم فيت",
+    totalAmount: 6000,
+  },
+  {
+    id: "pur-3",
+    invoiceNumber: "#P-206",
+    date: "١٨ نوفمبر ٢٠٢٦",
+    supplierName: "مورد مباشر",
+    safeName: "الخزينة الرئيسية",
+    itemsSummary: "٨٠× حزام جلد طبيعي",
+    totalAmount: 2000,
+  },
+];
+
+export const INITIAL_EXPENSES: ExpenseRow[] = [
+  {
+    id: "exp-1",
+    date: "٢٦ نوفمبر ٢٠٢٦",
+    description: "إيجار المخزن الشهري",
+    safeName: "الخزينة الرئيسية",
+    amount: 3000,
+  },
+  {
+    id: "exp-2",
+    date: "٢٤ نوفمبر ٢٠٢٦",
+    description: "إعلانات ميتا (فيسبوك وإنستجرام)",
+    safeName: "حساب إنستا باي / البنك",
+    amount: 4200,
+  },
+  {
+    id: "exp-3",
+    date: "٢٠ نوفمبر ٢٠٢٦",
+    description: "فواتير كهرباء وإنترنت",
+    safeName: "الخزينة الرئيسية",
+    amount: 1300,
+  },
+];
+
+export const INITIAL_WITHDRAWALS: WithdrawalRow[] = [
+  {
+    id: "wdr-1",
+    date: "٢٥ نوفمبر ٢٠٢٦",
+    description: "مسحوبات شخصية للمالك",
+    safeName: "الخزينة الرئيسية",
+    amount: 1500,
+  },
+  {
+    id: "wdr-2",
+    date: "١٩ نوفمبر ٢٠٢٦",
+    description: "مصروف شخصي طارئ",
+    safeName: "حساب إنستا باي / البنك",
+    amount: 500,
+  },
+];
+
+export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
+  {
+    id: "log-1",
+    actionType: "SALE_CREATED",
+    summary: "تم بيع ٢ تيشيرت قطن أوفرسايز بقيمة ٣٥٠.٠٠ ج.م",
+    amount: 350,
+    isPositive: true,
+    timeLabel: "١٢:٣٠ م",
+    dateLabel: "٢٦ نوفمبر",
+  },
+  {
+    id: "log-2",
+    actionType: "PURCHASE_CREATED",
+    summary: "شراء ١٠٠ تيشيرت قطن من مصنع النيل للمنسوجات",
+    amount: -4500,
+    isPositive: false,
+    timeLabel: "١١:١٥ ص",
+    dateLabel: "٢٦ نوفمبر",
+  },
+  {
+    id: "log-3",
+    actionType: "EXPENSE_CREATED",
+    summary: "سداد إيجار المخزن الشهري من الخزينة الرئيسية",
+    amount: -3000,
+    isPositive: false,
+    timeLabel: "١٠:٠٠ ص",
+    dateLabel: "٢٦ نوفمبر",
+  },
+  {
+    id: "log-4",
+    actionType: "WITHDRAWAL_CREATED",
+    summary: "مسحوبات شخصية للمالك من الخزينة الرئيسية",
+    amount: -1500,
+    isPositive: false,
+    timeLabel: "٠٤:٤٥ م",
+    dateLabel: "٢٥ نوفمبر",
+  },
+  {
+    id: "log-5",
+    actionType: "SALE_COLLECTED",
+    summary: "تحصيل فاتورة مبيعات #1038 (دفع عند الاستلام)",
+    amount: 840,
+    isPositive: true,
+    timeLabel: "٠٢:١٠ م",
+    dateLabel: "٢٥ نوفمبر",
+  },
+  {
+    id: "log-6",
+    actionType: "EXPENSE_CREATED",
+    summary: "تمويل حملة إعلانات ميتا (فيسبوك وإنستجرام)",
+    amount: -4200,
+    isPositive: false,
+    timeLabel: "٠٦:٢٠ م",
+    dateLabel: "٢٤ نوفمبر",
+  },
+  {
+    id: "log-7",
+    actionType: "SALE_CREATED",
+    summary: "بيع ٤ هودي شتوي مبطن (مدفوع نقداً)",
+    amount: 1680,
+    isPositive: true,
+    timeLabel: "٠١:٠٥ م",
+    dateLabel: "٢٤ نوفمبر",
+  },
+  {
+    id: "log-8",
+    actionType: "PURCHASE_CREATED",
+    summary: "شراء ٥٠ بنطلون جينز سليم فيت من شركة الدلتا",
+    amount: -6000,
+    isPositive: false,
+    timeLabel: "٠٣:٣٠ م",
+    dateLabel: "٢٢ نوفمبر",
+  },
+  {
+    id: "log-9",
+    actionType: "EXPENSE_CREATED",
+    summary: "سداد فواتير كهرباء وإنترنت",
+    amount: -1300,
+    isPositive: false,
+    timeLabel: "١١:٠٠ ص",
+    dateLabel: "٢٠ نوفمبر",
+  },
+  {
+    id: "log-10",
+    actionType: "WITHDRAWAL_CREATED",
+    summary: "مسحوبات شخصية من حساب إنستا باي",
+    amount: -500,
+    isPositive: false,
+    timeLabel: "٠٥:١٥ م",
+    dateLabel: "١٩ نوفمبر",
+  },
+];
+
+export const INITIAL_COMPANIES: CompanyTenantRow[] = [
+  {
+    id: "comp-1",
+    name: "شركة النور للتجارة الإلكترونية",
+    ownerName: "أحمد محمد",
+    ownerEmail: "ahmed@alnour.eg",
+    planStatus: "TRIAL",
+    createdAt: "٢٠ نوفمبر ٢٠٢٦",
+  },
+  {
+    id: "comp-2",
+    name: "متجر الأمل للأزياء",
+    ownerName: "سارة أحمد",
+    ownerEmail: "sara@alamal.eg",
+    planStatus: "ACTIVE",
+    createdAt: "٠٥ نوفمبر ٢٠٢٦",
+  },
+  {
+    id: "comp-3",
+    name: "بيت الموضة العصري",
+    ownerName: "محمد علي",
+    ownerEmail: "mohamed@fashionhouse.eg",
+    planStatus: "EXPIRED",
+    createdAt: "١٢ أكتوبر ٢٠٢٦",
+  },
+];
