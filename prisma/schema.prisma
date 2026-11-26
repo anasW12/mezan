@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum PlanStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+}
+
+enum Role {
+  OWNER
+  PLATFORM_ADMIN
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING_COLLECTION
+}
+
+enum ActionType {
+  PURCHASE_CREATED
+  SALE_CREATED
+  SALE_COLLECTED
+  EXPENSE_CREATED
+  WITHDRAWAL_CREATED
+  PRODUCT_ADDED
+  PRODUCT_UPDATED
+  SAFE_ADJUSTED
+  ASSET_ADDED
+}
+
+model Company {
+  id               String            @id @default(cuid())
+  name             String
+  currency         String            @default("EGP")
+  planStatus       PlanStatus        @default(TRIAL)
+  trialEndsAt      DateTime
+  createdAt        DateTime          @default(now())
+  users            User[]
+  safes            Safe[]
+  fixedAssets      FixedAsset[]
+  products         Product[]
+  purchaseInvoices PurchaseInvoice[]
+  salesInvoices    SalesInvoice[]
+  generalExpenses  GeneralExpense[]
+  ownerWithdrawals OwnerWithdrawal[]
+  auditLogs        AuditLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(OWNER)
+  companyId    String?
+  company      Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model Safe {
+  id               String            @id @default(cuid())
+  companyId        String
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name             String
+  balance          Decimal           @default(0) @db.Decimal(18, 4)
+  isDefault        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  purchaseInvoices PurchaseInvoice[]
+  salesInvoices    SalesInvoice[]
+  generalExpenses  GeneralExpense[]
+  ownerWithdrawals OwnerWithdrawal[]
+
+  @@index([companyId])
+}
+
+model FixedAsset {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name          String
+  purchaseValue Decimal  @db.Decimal(18, 4)
+  purchaseDate  DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  companyId        String
+  company          Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name             String
+  stockQuantity    Int            @default(0)
+  averageCostPrice Decimal        @default(0) @db.Decimal(18, 4)
+  sellingPrice     Decimal        @db.Decimal(18, 4)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  purchaseItems    PurchaseItem[]
+  salesItems       SalesItem[]
+
+  @@index([companyId])
+  @@index([companyId, name])
+}
+
+model PurchaseInvoice {
+  id           String         @id @default(cuid())
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  safeId       String
+  safe         Safe           @relation(fields: [safeId], references: [id], onDelete: Restrict)
+  supplierName String?
+  totalAmount  Decimal        @db.Decimal(18, 4)
+  notes        String?
+  createdAt    DateTime       @default(now())
+  items        PurchaseItem[]
+
+  @@index([companyId])
+}
+
+model PurchaseItem {
+  id                String          @id @default(cuid())
+  purchaseInvoiceId String
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity          Int
+  unitCost          Decimal         @db.Decimal(18, 4)
+
+  @@index([purchaseInvoiceId])
+  @@index([productId])
+}
+
+model SalesInvoice {
+  id            String        @id @default(cuid())
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  safeId        String?
+  safe          Safe?         @relation(fields: [safeId], references: [id], onDelete: Restrict)
+  customerName  String?
+  paymentStatus PaymentStatus @default(PAID)
+  totalRevenue  Decimal       @db.Decimal(18, 4)
+  directCost    Decimal       @default(0) @db.Decimal(18, 4)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  collectedAt   DateTime?
+  items         SalesItem[]
+
+  @@index([companyId])
+  @@index([companyId, paymentStatus])
+}
+
+model SalesItem {
+  id               String       @id @default(cuid())
+  salesInvoiceId   String
+  salesInvoice     SalesInvoice @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity         Int
+  unitPrice        Decimal      @db.Decimal(18, 4)
+  unitCostSnapshot Decimal      @db.Decimal(18, 4)
+
+  @@index([salesInvoiceId])
+  @@index([productId])
+}
+
+model GeneralExpense {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  safeId      String
+  safe        Safe     @relation(fields: [safeId], references: [id], onDelete: Restrict)
+  category    String
+  description String?
+  amount      Decimal  @db.Decimal(18, 4)
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model OwnerWithdrawal {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  safeId    String
+  safe      Safe     @relation(fields: [safeId], references: [id], onDelete: Restrict)
+  notes     String?
+  amount    Decimal  @db.Decimal(18, 4)
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  companyId  String
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  actionType ActionType
+  summary    String
+  amount     Decimal    @db.Decimal(18, 4)
+  createdAt  DateTime   @default(now())
+
+  @@index([companyId])
+  @@index([companyId, createdAt(sort: Desc)])
+}

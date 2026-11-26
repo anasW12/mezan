@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { useToast } from "@/components/shared/ToastProvider";
+import { registerAction } from "@/actions/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +27,24 @@ export default function RegisterPage() {
       );
       return;
     }
-    showToast("تم إنشاء الحساب! لنبدأ بإعداد شركتك");
-    router.push("/onboarding");
+
+    startTransition(async () => {
+      const result = await registerAction({
+        name,
+        companyName: companyName.trim() || undefined,
+        email,
+        password,
+      });
+
+      if (!result.success) {
+        showToast(result.error ?? "حدث خطأ أثناء إنشاء الحساب", "error");
+        return;
+      }
+
+      showToast("تم إنشاء الحساب والشركة والخزينة الرئيسية بنجاح");
+      router.push(result.data?.redirectTo ?? "/dashboard");
+      router.refresh();
+    });
   };
 
   return (
@@ -56,6 +75,23 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="مثال: أحمد محمد"
+              className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="companyName"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              اسم الشركة / المتجر (اختياري)
+            </label>
+            <input
+              id="companyName"
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="مثال: متجر النور للتجارة"
               className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
@@ -111,9 +147,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2"
+            disabled={isPending}
+            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            ابدأ تجربتك المجانية
+            {isPending ? "جاري إنشاء الحساب..." : "ابدأ تجربتك المجانية"}
           </button>
         </form>
 

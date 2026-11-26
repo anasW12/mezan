@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { useToast } from "@/components/shared/ToastProvider";
+import { loginAction } from "@/actions/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +22,18 @@ export default function LoginPage() {
       showToast("يرجى إدخال البريد الإلكتروني وكلمة المرور", "error");
       return;
     }
-    showToast("تم تسجيل الدخول بنجاح");
-    router.push("/dashboard");
+
+    startTransition(async () => {
+      const result = await loginAction({ email, password });
+      if (!result.success) {
+        showToast(result.error ?? "فشل تسجيل الدخول", "error");
+        return;
+      }
+
+      showToast("تم تسجيل الدخول بنجاح");
+      router.push(result.data?.redirectTo ?? "/dashboard");
+      router.refresh();
+    });
   };
 
   return (
@@ -87,9 +99,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2"
+            disabled={isPending}
+            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            تسجيل الدخول
+            {isPending ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
           </button>
         </form>
 
@@ -101,16 +114,14 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={() => {
-            showToast("تم تسجيل الدخول بحساب Google");
-            router.push("/dashboard");
-          }}
-          className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          disabled
+          title="متاح في المرحلة السادسة"
+          className="flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-400"
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-500">
             G
           </span>
-          <span>الدخول بحساب Google</span>
+          <span>الدخول بحساب Google (قريباً)</span>
         </button>
 
         <p className="mt-6 text-center text-sm text-slate-500">

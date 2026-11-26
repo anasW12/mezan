@@ -18,11 +18,27 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat("ar-EG").format(value);
 }
 
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+export function formatDate(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
   return new Intl.DateTimeFormat("ar-EG", {
     day: "numeric",
     month: "short",
     year: "numeric",
+  }).format(date);
+}
+
+export function formatTime(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("ar-EG", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function formatShortDate(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric",
+    month: "long",
   }).format(date);
 }

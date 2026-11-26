@@ -6,7 +6,11 @@ export type TransactionActionType =
   | "PURCHASE_CREATED"
   | "EXPENSE_CREATED"
   | "WITHDRAWAL_CREATED"
-  | "SALE_COLLECTED";
+  | "SALE_COLLECTED"
+  | "PRODUCT_ADDED"
+  | "PRODUCT_UPDATED"
+  | "SAFE_ADJUSTED"
+  | "ASSET_ADDED";
 
 export interface KpiSummary {
   cashbox: number;
@@ -44,10 +48,18 @@ export interface SafeAccount {
   isDefault: boolean;
 }
 
+export interface FixedAssetRow {
+  id: string;
+  name: string;
+  purchaseValue: number;
+  purchaseDate: string;
+}
+
 export interface SalesInvoiceRow {
   id: string;
   invoiceNumber: string;
   date: string;
+  customerName: string | null;
   itemsSummary: string;
   directCost: number;
   totalAmount: number;
@@ -67,6 +79,7 @@ export interface PurchaseInvoiceRow {
 export interface ExpenseRow {
   id: string;
   date: string;
+  category: string;
   description: string;
   safeName: string;
   amount: number;

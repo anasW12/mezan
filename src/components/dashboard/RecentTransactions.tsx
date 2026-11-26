@@ -5,7 +5,7 @@ import { CurrencyDisplay } from "@/components/shared/CurrencyDisplay";
 import { cn } from "@/lib/utils";
 import type { AuditLogEntry, TransactionActionType } from "@/types";
 
-const BADGE_MAP: Record<
+export const AUDIT_ACTION_BADGES: Record<
   TransactionActionType,
   { label: string; className: string }
 > = {
@@ -28,6 +28,22 @@ const BADGE_MAP: Record<
   SALE_COLLECTED: {
     label: "تحصيل",
     className: "bg-sky-50 text-sky-700",
+  },
+  PRODUCT_ADDED: {
+    label: "منتج جديد",
+    className: "bg-teal-50 text-teal-700",
+  },
+  PRODUCT_UPDATED: {
+    label: "تحديث مخزن",
+    className: "bg-amber-50 text-amber-700",
+  },
+  SAFE_ADJUSTED: {
+    label: "تسوية خزينة",
+    className: "bg-indigo-50 text-indigo-700",
+  },
+  ASSET_ADDED: {
+    label: "أصل ثابت",
+    className: "bg-purple-50 text-purple-700",
   },
 };
 
@@ -72,7 +88,7 @@ export function RecentTransactions({
           </thead>
           <tbody>
             {transactions.slice(0, 10).map((tx) => {
-              const badge = BADGE_MAP[tx.actionType];
+              const badge = AUDIT_ACTION_BADGES[tx.actionType];
               return (
                 <tr
                   key={tx.id}
