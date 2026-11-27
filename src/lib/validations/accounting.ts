@@ -1,15 +1,34 @@
 import { z } from "zod";
 
-export const purchaseItemSchema = z.object({
-  productId: z.string().trim().min(1, { error: "يرجى اختيار المنتج" }),
-  quantity: z.coerce
-    .number({ error: "الكمية غير صالحة" })
-    .int({ error: "الكمية يجب أن تكون رقماً صحيحاً" })
-    .positive({ error: "الكمية يجب أن تكون أكبر من صفر" }),
-  unitCost: z.coerce
-    .number({ error: "سعر الوحدة غير صالح" })
-    .min(0, { error: "سعر الوحدة لا يمكن أن يكون سالباً" }),
-});
+export const purchaseItemSchema = z
+  .object({
+    productId: z.string().trim().optional(),
+    productName: z
+      .string()
+      .trim()
+      .max(150, { error: "اسم المنتج طويل جداً" })
+      .optional(),
+    quantity: z.coerce
+      .number({ error: "الكمية غير صالحة" })
+      .int({ error: "الكمية يجب أن تكون رقماً صحيحاً" })
+      .positive({ error: "الكمية يجب أن تكون أكبر من صفر" }),
+    unitCost: z.coerce
+      .number({ error: "سعر الوحدة غير صالح" })
+      .min(0, { error: "سعر الوحدة لا يمكن أن يكون سالباً" }),
+    sellingPrice: z.coerce
+      .number({ error: "سعر البيع غير صالح" })
+      .min(0, { error: "سعر البيع لا يمكن أن يكون سالباً" })
+      .optional(),
+  })
+  .refine(
+    (item) =>
+      Boolean(item.productId && item.productId.length > 0) ||
+      Boolean(item.productName && item.productName.length > 0),
+    {
+      error: "يرجى اختيار منتج من المخزن أو كتابة اسم الصنف الجديد",
+      path: ["productName"],
+    }
+  );
 
 export const purchaseSchema = z.object({
   safeId: z.string().trim().min(1, { error: "يرجى اختيار الخزينة" }),

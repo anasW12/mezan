@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidateCompanyMeta } from "@/lib/company-cache";
 import {
   formatActionError,
   requireTenantCompanyId,
@@ -33,7 +34,6 @@ function revalidateSettingsRoutes() {
   revalidatePath("/sales/new");
   revalidatePath("/expenses");
   revalidatePath("/withdrawals");
-  revalidatePath("/", "layout");
 }
 
 export async function updateCompanyAction(
@@ -51,7 +51,9 @@ export async function updateCompanyAction(
     }
 
     await updateCompanyNameForCompany(companyId, parsed.data);
+    invalidateCompanyMeta(companyId);
     revalidateSettingsRoutes();
+    revalidatePath("/", "layout");
 
     return { success: true };
   } catch (error) {

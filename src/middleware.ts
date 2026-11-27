@@ -6,6 +6,22 @@ const { auth } = NextAuth(authConfig);
 
 const PUBLIC_ROUTES = new Set(["/", "/login", "/register"]);
 
+function isSubscriptionExpired(
+  planStatus: string | null | undefined,
+  trialEndsAt: string | null | undefined
+): boolean {
+  if (planStatus === "EXPIRED") {
+    return true;
+  }
+  if (planStatus === "TRIAL" && trialEndsAt) {
+    const expiryMs = Date.parse(trialEndsAt);
+    if (!Number.isNaN(expiryMs) && Date.now() > expiryMs) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
@@ -33,6 +49,12 @@ export default auth((req) => {
   }
 
   if (!user) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { success: false, error: "يرجى تسجيل الدخول أولاً" },
+        { status: 401 }
+      );
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -51,13 +73,28 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (user.planStatus === "EXPIRED" && pathname !== "/expired") {
-    return NextResponse.redirect(new URL("/expired", req.url));
+  const expired = isSubscriptionExpired(user.planStatus, user.trialEndsAt);
+
+  if (expired) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "انتهت صلاحية اشتراك الشركة. يرجى التجديد للمتابعة.",
+        },
+        { status: 403 }
+      );
+    }
+    if (pathname !== "/expired") {
+      return NextResponse.redirect(new URL("/expired", req.url));
+    }
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

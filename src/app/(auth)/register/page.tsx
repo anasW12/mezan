@@ -20,9 +20,17 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || password.length < 8) {
+    if (!name.trim() || name.trim().length < 2) {
+      showToast("يرجى إدخال الاسم الكامل (حرفان على الأقل)", "error");
+      return;
+    }
+    if (!companyName.trim() || companyName.trim().length < 2) {
+      showToast("يرجى إدخال اسم الشركة (حرفان على الأقل)", "error");
+      return;
+    }
+    if (!email.trim() || password.length < 8) {
       showToast(
-        "يرجى إدخال الاسم والبريد وكلمة مرور لا تقل عن ٨ أحرف",
+        "يرجى إدخال البريد الإلكتروني وكلمة مرور لا تقل عن ٨ أحرف",
         "error"
       );
       return;
@@ -30,9 +38,9 @@ export default function RegisterPage() {
 
     startTransition(async () => {
       const result = await registerAction({
-        name,
-        companyName: companyName.trim() || undefined,
-        email,
+        name: name.trim(),
+        companyName: companyName.trim(),
+        email: email.trim(),
         password,
       });
 
@@ -84,14 +92,14 @@ export default function RegisterPage() {
               htmlFor="companyName"
               className="mb-1.5 block text-sm font-medium text-slate-700"
             >
-              اسم الشركة / المتجر (اختياري)
+              اسم الشركة <span className="text-rose-500">*</span>
             </label>
             <input
               id="companyName"
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="مثال: متجر النور للتجارة"
+              placeholder="مثال: شركة النور للتجارة"
               className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>

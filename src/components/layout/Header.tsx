@@ -44,7 +44,7 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center border-b border-slate-200 bg-white/90 px-4 backdrop-blur-md lg:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center border-b border-slate-200 bg-white/95 px-4 lg:px-6">
       <button
         type="button"
         onClick={onOpenMobileMenu}
@@ -66,6 +66,7 @@ export function Header({
       <div className="flex items-center gap-2 sm:gap-3">
         <Link
           href="/audit-logs"
+          prefetch={false}
           aria-label="التنبيهات وسجل الحركات"
           className="relative flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
@@ -104,6 +105,7 @@ export function Header({
                 {isAdmin && (
                   <Link
                     href="/admin"
+                    prefetch={false}
                     onClick={() => setMenuOpen(false)}
                     className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   >

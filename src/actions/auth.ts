@@ -2,8 +2,16 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
-import { prisma } from "@/lib/prisma";
-import { signIn, signOut } from "@/lib/auth";
+import type { PlanStatus } from "@prisma/client";
+import { invalidateCompanyMeta } from "@/lib/company-cache";
+import { prisma, runTransaction } from "@/lib/prisma";
+import {
+  auth,
+  isGoogleOAuthEnabled,
+  signIn,
+  signOut,
+  unstable_update,
+} from "@/lib/auth";
 import {
   loginSchema,
   registerSchema,
@@ -48,10 +56,10 @@ export async function registerAction(
     const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
     const defaultCurrency = process.env.DEFAULT_CURRENCY ?? "EGP";
 
-    await prisma.$transaction(async (tx) => {
+    await runTransaction(async (tx) => {
       const company = await tx.company.create({
         data: {
-          name: companyName || `شركة ${name}`,
+          name: companyName,
           currency: defaultCurrency,
           planStatus: "TRIAL",
           trialEndsAt,
@@ -139,6 +147,70 @@ export async function loginAction(
     return {
       success: false,
       error: "حدث خطأ غير متوقع. حاول مرة أخرى.",
+    };
+  }
+}
+
+export async function googleLoginAction(): Promise<ActionResult | void> {
+  if (!isGoogleOAuthEnabled) {
+    return {
+      success: false,
+      error:
+        "الدخول بحساب Google يتطلب إضافة GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET في ملف البيئة",
+    };
+  }
+  await signIn("google", { redirectTo: "/dashboard" });
+}
+
+export async function refreshSubscriptionAction(): Promise<
+  ActionResult<{ planStatus: PlanStatus }>
+> {
+  try {
+    const session = await auth();
+    if (!session?.user?.companyId) {
+      return { success: false, error: "يرجى تسجيل الدخول أولاً" };
+    }
+
+    const company = await prisma.company.findUnique({
+      where: { id: session.user.companyId },
+      select: { id: true, planStatus: true, trialEndsAt: true },
+    });
+
+    if (!company) {
+      return { success: false, error: "الشركة غير موجودة" };
+    }
+
+    let effectiveStatus: PlanStatus = company.planStatus;
+    if (
+      company.planStatus === "TRIAL" &&
+      Date.now() > company.trialEndsAt.getTime()
+    ) {
+      await prisma.company.update({
+        where: { id: company.id },
+        data: { planStatus: "EXPIRED" },
+      });
+      invalidateCompanyMeta(company.id);
+      effectiveStatus = "EXPIRED";
+    } else {
+      invalidateCompanyMeta(company.id);
+    }
+
+    await unstable_update({
+      user: {
+        planStatus: effectiveStatus,
+        trialEndsAt: company.trialEndsAt.toISOString(),
+      },
+    });
+
+    return {
+      success: true,
+      data: { planStatus: effectiveStatus },
+    };
+  } catch (error) {
+    console.error("refreshSubscriptionAction error:", error);
+    return {
+      success: false,
+      error: "تعذر التحقق من حالة الاشتراك حالياً",
     };
   }
 }

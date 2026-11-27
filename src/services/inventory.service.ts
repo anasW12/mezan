@@ -1,11 +1,8 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma, runTransaction } from "@/lib/prisma";
 import { BusinessRuleError } from "@/lib/action-utils";
 import { writeAuditLog } from "@/services/audit.service";
-import type {
-  ProductCreateInput,
-  ProductUpdateInput,
-} from "@/lib/validations/inventory";
+import type { ProductUpdateInput } from "@/lib/validations/inventory";
 
 /**
  * Weighted Average Cost Price formula:
@@ -34,42 +31,16 @@ export async function getProductsByCompany(companyId: string) {
   });
 }
 
-export async function createProductForCompany(
-  companyId: string,
-  input: ProductCreateInput
-) {
-  return prisma.$transaction(async (tx) => {
-    const avgCost = new Prisma.Decimal(input.averageCostPrice);
-    const sellingPrice = new Prisma.Decimal(input.sellingPrice);
-
-    const product = await tx.product.create({
-      data: {
-        companyId,
-        name: input.name,
-        stockQuantity: input.stockQuantity,
-        averageCostPrice: avgCost,
-        sellingPrice,
-      },
-    });
-
-    const initialValuation = avgCost.mul(input.stockQuantity);
-
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "PRODUCT_ADDED",
-      summary: `إضافة منتج جديد: ${product.name} (الكمية: ${product.stockQuantity})`,
-      amount: initialValuation,
-    });
-
-    return product;
-  });
-}
-
+/**
+ * Administrative inventory update only: allows changing product name and
+ * customer selling price. Stock quantity and weighted average cost are modified
+ * exclusively through purchase and sales invoices.
+ */
 export async function updateProductForCompany(
   companyId: string,
   input: ProductUpdateInput
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const existing = await tx.product.findFirst({
       where: { id: input.id, companyId },
     });
@@ -78,63 +49,39 @@ export async function updateProductForCompany(
       throw new BusinessRuleError("المنتج غير موجود أو لا ينتمي لهذه الشركة");
     }
 
-    const updated = await tx.product.update({
-      where: { id: existing.id },
-      data: {
-        name: input.name,
-        stockQuantity: input.stockQuantity,
-        averageCostPrice: new Prisma.Decimal(input.averageCostPrice),
-        sellingPrice: new Prisma.Decimal(input.sellingPrice),
-      },
-    });
+    const nextSellingPrice = new Prisma.Decimal(input.sellingPrice);
 
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "PRODUCT_UPDATED",
-      summary: `تعديل بيانات المنتج: ${updated.name} (الكمية: ${updated.stockQuantity})`,
-      amount: 0,
-    });
-
-    return updated;
-  });
-}
-
-export async function deleteProductForCompany(
-  companyId: string,
-  productId: string
-) {
-  return prisma.$transaction(async (tx) => {
-    const existing = await tx.product.findFirst({
-      where: { id: productId, companyId },
-      include: {
-        _count: {
-          select: {
-            purchaseItems: true,
-            salesItems: true,
-          },
-        },
-      },
-    });
-
-    if (!existing) {
-      throw new BusinessRuleError("المنتج غير موجود أو لا ينتمي لهذه الشركة");
+    const changes: string[] = [];
+    if (existing.name !== input.name) {
+      changes.push(`تغيير الاسم من "${existing.name}" إلى "${input.name}"`);
     }
-
-    if (existing._count.purchaseItems > 0 || existing._count.salesItems > 0) {
-      throw new BusinessRuleError(
-        "لا يمكن حذف هذا المنتج لارتباطه بفواتير بيع أو شراء مسجلة"
+    if (!existing.sellingPrice.eq(nextSellingPrice)) {
+      changes.push(
+        `تعديل سعر البيع من ${existing.sellingPrice.toFixed(2)} إلى ${nextSellingPrice.toFixed(2)} ج.م`
       );
     }
 
-    await tx.product.delete({
-      where: { id: existing.id },
-    });
+    const summary =
+      changes.length > 0
+        ? `تحديث إداري للمنتج (${input.name}): ${changes.join("، ")}`
+        : `تأكيد البيانات الإدارية للمنتج: ${input.name}`;
 
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "PRODUCT_UPDATED",
-      summary: `حذف المنتج من المخزن: ${existing.name}`,
-      amount: 0,
-    });
+    const [updated] = await Promise.all([
+      tx.product.update({
+        where: { id: existing.id },
+        data: {
+          name: input.name,
+          sellingPrice: nextSellingPrice,
+        },
+      }),
+      writeAuditLog(tx, {
+        companyId,
+        actionType: "PRODUCT_UPDATED",
+        summary,
+        amount: 0,
+      }),
+    ]);
+
+    return updated;
   });
 }

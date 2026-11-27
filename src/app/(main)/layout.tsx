@@ -1,30 +1,60 @@
-"use client";
+import React from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import {
+  getCachedCompanyLayoutMeta,
+  invalidateCompanyMeta,
+} from "@/lib/company-cache";
+import { prisma } from "@/lib/prisma";
+import { MainShell } from "@/components/layout/MainShell";
 
-import React, { useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { MobileNav } from "@/components/layout/MobileNav";
-import { Sidebar } from "@/components/layout/Sidebar";
-
-export default function MainAppLayout({
+export default async function MainAppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  let companyName = "شركتي";
+  if (session.user.companyId) {
+    const company = await getCachedCompanyLayoutMeta(session.user.companyId);
+
+    if (!company) {
+      redirect("/login");
+    }
+
+    const trialEndsMs = Date.parse(company.trialEndsAt);
+    if (
+      company.planStatus === "TRIAL" &&
+      !Number.isNaN(trialEndsMs) &&
+      Date.now() > trialEndsMs
+    ) {
+      await prisma.company.update({
+        where: { id: company.id },
+        data: { planStatus: "EXPIRED" },
+      });
+      invalidateCompanyMeta(company.id);
+      redirect("/expired");
+    }
+
+    if (company.planStatus === "EXPIRED") {
+      redirect("/expired");
+    }
+
+    companyName = company.name;
+  }
 
   return (
-    <div className="bg-calm-canvas min-h-screen">
-      <Sidebar />
-      <div className="flex min-h-screen flex-col lg:ps-64">
-        <Header onOpenMobileMenu={() => setDrawerOpen(true)} />
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-24 sm:p-6 lg:pb-8">
-          {children}
-        </main>
-      </div>
-      <MobileNav
-        drawerOpen={drawerOpen}
-        onCloseDrawer={() => setDrawerOpen(false)}
-      />
-    </div>
+    <MainShell
+      userName={session.user.name}
+      userEmail={session.user.email}
+      companyName={companyName}
+      isAdmin={session.user.role === "PLATFORM_ADMIN"}
+    >
+      {children}
+    </MainShell>
   );
 }

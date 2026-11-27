@@ -53,6 +53,7 @@ export function MobileNav({ drawerOpen, onCloseDrawer }: MobileNavProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     onClick={onCloseDrawer}
                     className={cn(
                       "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
@@ -79,7 +80,7 @@ export function MobileNav({ drawerOpen, onCloseDrawer }: MobileNavProps) {
 
       <nav
         aria-label="التنقل السريع"
-        className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white/95 px-2 backdrop-blur-md lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white/95 px-2 lg:hidden"
       >
         {MOBILE_TAB_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -88,6 +89,7 @@ export function MobileNav({ drawerOpen, onCloseDrawer }: MobileNavProps) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-lg px-2 py-1 transition-colors",
                 active ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"

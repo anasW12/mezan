@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma, runTransaction } from "@/lib/prisma";
 import { BusinessRuleError } from "@/lib/action-utils";
 import { InsufficientBalanceError } from "@/lib/errors";
 import { writeAuditLog } from "@/services/audit.service";
@@ -50,26 +50,29 @@ export async function createSafeForCompany(
   companyId: string,
   input: CreateSafeInput
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const initialBalance = new Prisma.Decimal(input.initialBalance ?? 0);
 
-    const safe = await tx.safe.create({
-      data: {
-        companyId,
-        name: input.name,
-        balance: initialBalance,
-        isDefault: false,
-      },
-    });
-
-    if (initialBalance.gt(0)) {
-      await writeAuditLog(tx, {
-        companyId,
-        actionType: "SAFE_ADJUSTED",
-        summary: `إنشاء خزينة "${safe.name}" برصيد افتتاحي`,
-        amount: initialBalance,
-      });
-    }
+    const [safe] = await Promise.all([
+      tx.safe.create({
+        data: {
+          companyId,
+          name: input.name,
+          balance: initialBalance,
+          isDefault: false,
+        },
+      }),
+      ...(initialBalance.gt(0)
+        ? [
+            writeAuditLog(tx, {
+              companyId,
+              actionType: "SAFE_ADJUSTED",
+              summary: `إنشاء خزينة "${input.name}" برصيد افتتاحي`,
+              amount: initialBalance,
+            }),
+          ]
+        : []),
+    ]);
 
     return safe;
   });
@@ -79,7 +82,7 @@ export async function adjustSafeBalanceForCompany(
   companyId: string,
   input: AdjustSafeInput
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const safe = await tx.safe.findFirst({
       where: { id: input.safeId, companyId },
     });
@@ -97,19 +100,20 @@ export async function adjustSafeBalanceForCompany(
       );
     }
 
-    const updated = await tx.safe.update({
-      where: { id: safe.id },
-      data: { balance: nextBalance },
-    });
-
     const directionLabel = delta.gt(0) ? "إيداع / تسوية زيادة" : "سحب / تسوية نقص";
 
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "SAFE_ADJUSTED",
-      summary: `${directionLabel} في "${safe.name}": ${input.reason}`,
-      amount: delta,
-    });
+    const [updated] = await Promise.all([
+      tx.safe.update({
+        where: { id: safe.id },
+        data: { balance: nextBalance },
+      }),
+      writeAuditLog(tx, {
+        companyId,
+        actionType: "SAFE_ADJUSTED",
+        summary: `${directionLabel} في "${safe.name}": ${input.reason}`,
+        amount: delta,
+      }),
+    ]);
 
     return updated;
   });
@@ -119,7 +123,7 @@ export async function createFixedAssetForCompany(
   companyId: string,
   input: CreateFixedAssetInput
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const purchaseValue = new Prisma.Decimal(input.purchaseValue);
     const purchaseDate = new Date(input.purchaseDate);
 
@@ -127,21 +131,22 @@ export async function createFixedAssetForCompany(
       throw new BusinessRuleError("تاريخ الشراء غير صالح");
     }
 
-    const asset = await tx.fixedAsset.create({
-      data: {
+    const [asset] = await Promise.all([
+      tx.fixedAsset.create({
+        data: {
+          companyId,
+          name: input.name,
+          purchaseValue,
+          purchaseDate,
+        },
+      }),
+      writeAuditLog(tx, {
         companyId,
-        name: input.name,
-        purchaseValue,
-        purchaseDate,
-      },
-    });
-
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "ASSET_ADDED",
-      summary: `إضافة أصل ثابت: ${asset.name}`,
-      amount: purchaseValue,
-    });
+        actionType: "ASSET_ADDED",
+        summary: `إضافة أصل ثابت: ${input.name}`,
+        amount: purchaseValue,
+      }),
+    ]);
 
     return asset;
   });
@@ -151,7 +156,7 @@ export async function deleteFixedAssetForCompany(
   companyId: string,
   assetId: string
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const asset = await tx.fixedAsset.findFirst({
       where: { id: assetId, companyId },
     });
@@ -160,15 +165,16 @@ export async function deleteFixedAssetForCompany(
       throw new BusinessRuleError("الأصل الثابت غير موجود");
     }
 
-    await tx.fixedAsset.delete({
-      where: { id: asset.id },
-    });
-
-    await writeAuditLog(tx, {
-      companyId,
-      actionType: "ASSET_ADDED",
-      summary: `حذف أصل ثابت: ${asset.name}`,
-      amount: asset.purchaseValue.neg(),
-    });
+    await Promise.all([
+      tx.fixedAsset.delete({
+        where: { id: asset.id },
+      }),
+      writeAuditLog(tx, {
+        companyId,
+        actionType: "ASSET_ADDED",
+        summary: `حذف أصل ثابت: ${asset.name}`,
+        amount: asset.purchaseValue.neg(),
+      }),
+    ]);
   });
 }

@@ -16,6 +16,7 @@ export function BrandLogo({
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn("inline-flex items-center gap-2.5", className)}
     >
       <div

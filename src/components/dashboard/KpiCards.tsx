@@ -90,7 +90,11 @@ export function KpiCards({ kpis }: { kpis: KpiSummary }) {
               <div className="mt-1">
                 <CurrencyDisplay
                   amount={kpis[card.key]}
-                  className="text-2xl font-bold text-slate-900"
+                  tone={card.key === "netProfit" ? "auto" : "neutral"}
+                  className={cn(
+                    "text-2xl font-bold",
+                    card.key !== "netProfit" && "text-slate-900"
+                  )}
                 />
               </div>
             </div>

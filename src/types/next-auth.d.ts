@@ -9,6 +9,7 @@ declare module "next-auth" {
     role: Role;
     companyId: string | null;
     planStatus: PlanStatus | null;
+    trialEndsAt: string | null;
   }
 
   interface Session {
@@ -19,6 +20,7 @@ declare module "next-auth" {
       role: Role;
       companyId: string | null;
       planStatus: PlanStatus | null;
+      trialEndsAt: string | null;
     } & DefaultSession["user"];
   }
 }

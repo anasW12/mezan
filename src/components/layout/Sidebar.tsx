@@ -30,6 +30,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150",
                 active
@@ -53,6 +54,7 @@ export function Sidebar() {
       <div className="border-t border-slate-100 p-3">
         <Link
           href={SETTINGS_NAV_ITEM.href}
+          prefetch={false}
           className={cn(
             "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150",
             isItemActive(SETTINGS_NAV_ITEM.href)

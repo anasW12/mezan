@@ -59,7 +59,7 @@ export interface SalesInvoiceRow {
   id: string;
   invoiceNumber: string;
   date: string;
-  customerName: string | null;
+  customerName?: string | null;
   itemsSummary: string;
   directCost: number;
   totalAmount: number;
@@ -79,7 +79,7 @@ export interface PurchaseInvoiceRow {
 export interface ExpenseRow {
   id: string;
   date: string;
-  category: string;
+  category?: string;
   description: string;
   safeName: string;
   amount: number;
@@ -103,17 +103,40 @@ export interface CompanyTenantRow {
 }
 
 export interface AIParseItem {
+  productId?: string | null;
   productName: string;
   quantity: number;
   unitPrice: number;
+  sellingPrice?: number;
+  createIfMissing?: boolean;
+}
+
+export interface AIProductFields {
+  name: string;
+  stockQuantity: number;
+  averageCostPrice: number;
+  sellingPrice: number;
 }
 
 export interface AIParsePreview {
-  action: "PURCHASE" | "SALE" | "EXPENSE" | "WITHDRAWAL";
+  action:
+    | "PURCHASE"
+    | "SALE"
+    | "EXPENSE"
+    | "WITHDRAWAL"
+    | "ADD_PRODUCT"
+    | "SAFE_DEPOSIT";
   actionLabel: string;
-  items?: AIParseItem[];
-  description?: string;
+  paymentStatus?: PaymentStatus;
+  safeId?: string | null;
   safeName: string;
+  supplierName?: string | null;
+  customerName?: string | null;
+  directCost?: number;
+  category?: string | null;
+  items?: AIParseItem[];
+  productFields?: AIProductFields;
+  description?: string | null;
   totalAmount: number;
   arabicSummary: string;
 }
