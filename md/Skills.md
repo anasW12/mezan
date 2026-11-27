@@ -69,3 +69,10 @@ You are a Senior Full-Stack Engineer building a B2B Cloud Accounting and Invento
 - **No Sensitive Data in URLs:** Never pass passwords, tokens, or financial data in URL parameters.
 - **Environment Variables:** All secrets (DATABASE_URL, NEXTAUTH_SECRET, API keys) MUST be in `.env` and NEVER committed to Git. Add `.env` to `.gitignore`.
 - **HTTP Security Headers:** Configure `next.config.ts` with security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+
+# 11. Git & GitHub Workflow Rules
+- **Protected Production Branch (`main`):** Direct `git commit` or `git push` to `main` is strictly prohibited under all circumstances. Keep `main` as the single production branch (never create `master`).
+- **Feature & Fix Branching:** For every new feature, enhancement, or bug fix, create a dedicated branch from the latest `dev` using the format `feature/<short-name>` or `fix/<short-name>`.
+- **Verify, Push & Pull Request:** After completing changes and passing `npx tsc --noEmit` (with zero TypeScript errors), push the branch to GitHub (`git push -u origin <branch-name>`) and direct the user to open a Pull Request to merge into `dev`.
+- **Sync & Production Release:** After merging into `dev`, pull updates locally (`git checkout dev && git pull`). Only merge `dev` into `main` when ready to deploy to Vercel.
+- **Secrets Protection:** Ensure `.env`, `.env.local`, and `.env*.local` remain in `.gitignore` and confirm no secret keys appear in `git status` before every commit.
