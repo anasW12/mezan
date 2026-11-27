@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import {
+  getCachedCompanyLayoutMeta,
+  isCompanySubscriptionExpired,
+} from "@/lib/company-cache";
 import { checkUserRateLimit } from "@/lib/rate-limit";
 import { serializeProduct, serializeSafe } from "@/lib/serializers";
 import { parseEntryRequestSchema } from "@/lib/validations/ai";
@@ -22,7 +26,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (session.user.planStatus === "EXPIRED") {
+    const companyId = session.user.companyId;
+    const companyMeta = await getCachedCompanyLayoutMeta(companyId);
+    if (!companyMeta) {
+      return NextResponse.json(
+        { success: false, error: "الشركة غير موجودة" },
+        { status: 404 }
+      );
+    }
+
+    if (isCompanySubscriptionExpired(companyMeta)) {
       return NextResponse.json(
         {
           success: false,
@@ -64,7 +77,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const companyId = session.user.companyId;
     const [dbProducts, dbSafes] = await Promise.all([
       getProductsByCompany(companyId),
       getSafesByCompany(companyId),

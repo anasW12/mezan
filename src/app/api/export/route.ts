@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { auth } from "@/lib/auth";
+import { isCompanySubscriptionExpired } from "@/lib/company-cache";
 import { prisma } from "@/lib/prisma";
+import { checkSlidingWindowRateLimit } from "@/lib/rate-limit";
 import { formatInvoiceItemsSummary } from "@/lib/serializers";
 import { formatDate } from "@/lib/utils";
 import { getDashboardData } from "@/services/dashboard.service";
@@ -26,10 +28,25 @@ function styleHeaderRow(sheet: ExcelJS.Worksheet) {
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user?.companyId) {
+    if (!session?.user?.id || !session.user.companyId) {
       return NextResponse.json(
         { success: false, error: "يرجى تسجيل الدخول أولاً" },
         { status: 401 }
+      );
+    }
+
+    const rate = checkSlidingWindowRateLimit({
+      key: `export:${session.user.id}`,
+      maxAttempts: 5,
+      windowMs: 60 * 1000,
+    });
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "تم تجاوز الحد المسموح لتصدير الملفات. يرجى الانتظار دقيقة.",
+        },
+        { status: 429 }
       );
     }
 
@@ -46,10 +63,7 @@ export async function GET() {
       );
     }
 
-    const isExpired =
-      company.planStatus === "EXPIRED" ||
-      (company.planStatus === "TRIAL" &&
-        Date.now() > company.trialEndsAt.getTime());
+    const isExpired = isCompanySubscriptionExpired(company);
 
     if (isExpired) {
       return NextResponse.json(

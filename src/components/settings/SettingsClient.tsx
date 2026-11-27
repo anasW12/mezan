@@ -1,10 +1,25 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Building2, Download, Landmark, Plus, Trash2, Vault } from "lucide-react";
+import {
+  Building2,
+  Check,
+  Download,
+  Eye,
+  EyeOff,
+  Landmark,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  Vault,
+} from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { CurrencyDisplay } from "@/components/shared/CurrencyDisplay";
 import { useToast } from "@/components/shared/ToastProvider";
+import {
+  changePasswordAction,
+  setInitialPasswordAction,
+} from "@/actions/auth";
 import {
   adjustSafeBalanceAction,
   createFixedAssetAction,
@@ -19,6 +34,8 @@ interface SettingsClientProps {
   currency: string;
   safes: SafeAccount[];
   fixedAssets: FixedAssetRow[];
+  accountEmail: string;
+  hasPassword: boolean;
 }
 
 export function SettingsClient({
@@ -26,9 +43,20 @@ export function SettingsClient({
   currency,
   safes,
   fixedAssets,
+  accountEmail,
+  hasPassword,
 }: SettingsClientProps) {
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [isPasswordPending, startPasswordTransition] = useTransition();
+
+  const [accountHasPassword, setAccountHasPassword] = useState(hasPassword);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   const [companyName, setCompanyName] = useState(initialCompanyName);
   const [newSafeName, setNewSafeName] = useState("");
@@ -193,6 +221,57 @@ export function SettingsClient({
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const pwHasMinLength = newPassword.length >= 8;
+  const pwHasLetter = /[a-zA-Z\u0600-\u06FF]/.test(newPassword);
+  const pwHasDigit = /\d/.test(newPassword);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (accountHasPassword && !currentPassword) {
+      showToast("يرجى إدخال كلمة المرور الحالية", "error");
+      return;
+    }
+    if (!pwHasMinLength || !pwHasLetter || !pwHasDigit) {
+      showToast(
+        "كلمة المرور الجديدة يجب أن تكون ٨ أحرف على الأقل وتحتوي على حروف وأرقام",
+        "error"
+      );
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      showToast("كلمتا المرور غير متطابقتين", "error");
+      return;
+    }
+
+    startPasswordTransition(async () => {
+      const result = accountHasPassword
+        ? await changePasswordAction({
+            currentPassword,
+            newPassword,
+            confirmPassword: confirmNewPassword,
+          })
+        : await setInitialPasswordAction({
+            newPassword,
+            confirmPassword: confirmNewPassword,
+          });
+
+      if (!result.success) {
+        showToast(result.error ?? "تعذر تحديث كلمة المرور", "error");
+        return;
+      }
+
+      setAccountHasPassword(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      showToast(
+        accountHasPassword
+          ? "تم تغيير كلمة المرور بنجاح"
+          : "تم تعيين كلمة مرور للحساب بنجاح"
+      );
+    });
   };
 
   return (
@@ -457,6 +536,176 @@ export function SettingsClient({
           </button>
         </form>
       </div>
+
+      {/* Account Security & Password */}
+      <form
+        onSubmit={handlePasswordSubmit}
+        className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
+      >
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">
+                الأمان وكلمة المرور
+              </h3>
+              <p className="text-xs text-slate-500" dir="ltr">
+                {accountEmail}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+              accountHasPassword
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-blue-50 text-blue-700"
+            }`}
+          >
+            {accountHasPassword
+              ? "حساب محمي بكلمة مرور واحدة"
+              : "مسجل عبر Google بدون كلمة مرور"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {accountHasPassword && (
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                كلمة المرور الحالية
+              </label>
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الحالية"
+                  className="h-10 w-full rounded-md border border-slate-300 bg-white pe-10 ps-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                  aria-label={
+                    showCurrentPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                  }
+                  className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              {accountHasPassword ? "كلمة المرور الجديدة" : "تعيين كلمة المرور"}
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="٨ أحرف على الأقل (حروف + أرقام)"
+                className="h-10 w-full rounded-md border border-slate-300 bg-white pe-10 ps-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((prev) => !prev)}
+                aria-label={
+                  showNewPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                }
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+              >
+                {showNewPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+                  pwHasMinLength
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                <Check className="h-3 w-3" />٨ أحرف على الأقل
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+                  pwHasLetter && pwHasDigit
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                <Check className="h-3 w-3" />
+                حروف وأرقام
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              تأكيد كلمة المرور الجديدة
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmNewPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="أعد كتابة كلمة المرور"
+                className="h-10 w-full rounded-md border border-slate-300 bg-white pe-10 ps-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmNewPassword((prev) => !prev)}
+                aria-label={
+                  showConfirmNewPassword
+                    ? "إخفاء كلمة المرور"
+                    : "إظهار كلمة المرور"
+                }
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+              >
+                {showConfirmNewPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {confirmNewPassword.length > 0 &&
+              newPassword !== confirmNewPassword && (
+                <p className="mt-1 text-xs text-rose-600">
+                  كلمتا المرور غير متطابقتين
+                </p>
+              )}
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <button
+            type="submit"
+            disabled={isPasswordPending}
+            className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {isPasswordPending
+              ? "جاري التحديث..."
+              : accountHasPassword
+                ? "تغيير كلمة المرور"
+                : "تعيين كلمة المرور"}
+          </button>
+        </div>
+      </form>
 
       {/* Export Data */}
       <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">

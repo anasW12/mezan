@@ -12,6 +12,25 @@ export function getCompanyMetaTag(companyId: string): string {
   return `company-meta:${companyId}`;
 }
 
+export function isCompanySubscriptionExpired(company: {
+  planStatus: "TRIAL" | "ACTIVE" | "EXPIRED";
+  trialEndsAt: string | Date;
+}): boolean {
+  if (company.planStatus === "EXPIRED") {
+    return true;
+  }
+  if (company.planStatus === "TRIAL") {
+    const trialEndsMs =
+      company.trialEndsAt instanceof Date
+        ? company.trialEndsAt.getTime()
+        : Date.parse(company.trialEndsAt);
+    if (!Number.isNaN(trialEndsMs) && Date.now() > trialEndsMs) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function getCachedCompanyLayoutMeta(
   companyId: string
 ): Promise<CompanyLayoutMeta | null> {

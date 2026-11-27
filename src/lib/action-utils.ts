@@ -1,5 +1,9 @@
 import { auth } from "@/lib/auth";
 import {
+  getCachedCompanyLayoutMeta,
+  isCompanySubscriptionExpired,
+} from "@/lib/company-cache";
+import {
   InsufficientBalanceError,
   InsufficientStockError,
   UnauthorizedTenantError,
@@ -22,6 +26,18 @@ export class BusinessRuleError extends Error {
 export async function requireTenantCompanyId(): Promise<string> {
   const session = await auth();
   const { companyId } = tenantWhere(session);
+
+  const company = await getCachedCompanyLayoutMeta(companyId);
+  if (!company) {
+    throw new UnauthorizedTenantError("الشركة غير موجودة أو تم تعطيل حسابها");
+  }
+
+  if (isCompanySubscriptionExpired(company)) {
+    throw new BusinessRuleError(
+      "انتهت صلاحية اشتراك الشركة. يرجى التجديد للمتابعة."
+    );
+  }
+
   return companyId;
 }
 
