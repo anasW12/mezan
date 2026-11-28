@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useDeferredValue, useMemo, useState } from "react";
+import React, { useDeferredValue, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { CurrencyDisplay } from "@/components/shared/CurrencyDisplay";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { useToast } from "@/components/shared/ToastProvider";
+import { deletePurchaseAction } from "@/actions/accounting";
 import { formatNumber } from "@/lib/utils";
 import type { PurchaseInvoiceRow } from "@/types";
 
@@ -13,8 +16,13 @@ interface PurchasesClientProps {
 }
 
 export function PurchasesClient({ purchases }: PurchasesClientProps) {
+  const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseInvoiceRow | null>(
+    null
+  );
+  const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
     const q = deferredSearch.trim().toLowerCase();
@@ -26,6 +34,25 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
         p.itemsSummary.toLowerCase().includes(q)
     );
   }, [purchases, deferredSearch]);
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+
+    startTransition(async () => {
+      const result = await deletePurchaseAction(target.id);
+      setDeleteTarget(null);
+
+      if (!result.success) {
+        showToast(result.error ?? "تعذر حذف فاتورة الشراء", "error");
+        return;
+      }
+
+      showToast(
+        `تم حذف فاتورة الشراء ${target.invoiceNumber} وتحديث المخزن والخزينة`
+      );
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -89,6 +116,9 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
                   <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
                     الإجمالي
                   </th>
+                  <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
+                    الإجراءات
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -98,7 +128,9 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
                     className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
                   >
                     <td className="tabular-nums px-6 py-4 text-sm font-semibold text-slate-900">
-                      {inv.invoiceNumber}
+                      <span dir="ltr" className="inline-block">
+                        {inv.invoiceNumber}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {inv.date}
@@ -115,6 +147,29 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
                     <td className="px-6 py-4 text-end text-sm">
                       <CurrencyDisplay amount={inv.totalAmount} />
                     </td>
+                    <td className="px-6 py-4 text-end">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/purchases/${inv.id}/edit`}
+                          prefetch={false}
+                          aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span>تعديل</span>
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => setDeleteTarget(inv)}
+                          aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>حذف</span>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -126,6 +181,14 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
           <span>عرض {formatNumber(filtered.length)} فواتير شراء</span>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={`حذف فاتورة الشراء ${deleteTarget?.invoiceNumber ?? ""}؟`}
+        description="سيتم حذف الفاتورة وإعادة قيمتها للخزينة وخصم كمياتها من المخزن (يشترط توفر الكميات حالياً في المخزن)."
+        onConfirm={handleDelete}
+        onCancel={() => !isPending && setDeleteTarget(null)}
+      />
     </div>
   );
 }
