@@ -41,7 +41,7 @@ export function ExpiredClient({ companyName }: ExpiredClientProps) {
         <BrandLogo href="/" />
       </div>
 
-      <div className="surface-glass w-full max-w-lg rounded-2xl border border-slate-200/80 p-8 text-center shadow-lg">
+      <div className="surface-glass w-full max-w-lg rounded-2xl border border-slate-200/80 p-5 text-center shadow-lg sm:p-8">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-600">
           <ShieldAlert className="h-6 w-6" />
         </div>

@@ -264,7 +264,7 @@ export function NewPurchaseForm({
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
           {isEdit
             ? `تعديل فاتورة شراء ${initialData?.invoiceNumber ?? ""}`
             : "فاتورة شراء جديدة"}
@@ -278,9 +278,9 @@ export function NewPurchaseForm({
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8"
+        className="space-y-6 rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6 lg:p-8"
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
               المورد (اختياري)
@@ -375,8 +375,8 @@ export function NewPurchaseForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
-                    <div className="sm:col-span-6">
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-12">
+                    <div className="col-span-2 md:col-span-6">
                       <label className="mb-1 block text-xs font-medium text-slate-600">
                         الصنف <span className="text-rose-500">*</span>
                       </label>
@@ -428,7 +428,7 @@ export function NewPurchaseForm({
                       )}
                     </div>
 
-                    <div className="sm:col-span-3">
+                    <div className="col-span-1 md:col-span-3">
                       <label className="mb-1 block text-xs font-medium text-slate-600">
                         الكمية <span className="text-rose-500">*</span>
                       </label>
@@ -446,7 +446,7 @@ export function NewPurchaseForm({
                       />
                     </div>
 
-                    <div className="sm:col-span-3">
+                    <div className="col-span-1 md:col-span-3">
                       <label className="mb-1 block text-xs font-medium text-slate-600">
                         سعر التكلفة للوحدة{" "}
                         <span className="text-rose-500">*</span>
@@ -480,7 +480,7 @@ export function NewPurchaseForm({
                           onChange={(e) =>
                             updateLine(idx, { productName: e.target.value })
                           }
-                          placeholder="مثال: آيفون 17 برو"
+                          placeholder="مثال: رزمة ورق طباعة A4"
                           className="h-9 w-full rounded-md border border-emerald-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                         />
                       </div>
@@ -550,19 +550,19 @@ export function NewPurchaseForm({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-stretch justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-start">
             <span className="text-sm font-medium text-slate-500">
               الإجمالي المخصوم من الخزينة:
             </span>
             <CurrencyDisplay amount={totalAmount} className="text-xl" />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+              className="min-h-[44px] rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
             >
               {isPending
                 ? "جاري الحفظ..."
@@ -572,7 +572,7 @@ export function NewPurchaseForm({
             </button>
             <Link
               href="/purchases"
-              className="rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               إلغاء
             </Link>

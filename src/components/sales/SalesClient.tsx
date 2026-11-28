@@ -88,11 +88,22 @@ export function SalesClient({ sales }: SalesClientProps) {
     });
   };
 
+  const renderStatusBadge = (paymentStatus: PaymentStatus) =>
+    paymentStatus === "PAID" ? (
+      <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+        مدفوع
+      </span>
+    ) : (
+      <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+        تحت التحصيل
+      </span>
+    );
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center print:hidden">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
             المبيعات والتحصيل
           </h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -101,7 +112,7 @@ export function SalesClient({ sales }: SalesClientProps) {
         </div>
         <Link
           href="/sales/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           <span>فاتورة بيع جديدة</span>
@@ -121,7 +132,7 @@ export function SalesClient({ sales }: SalesClientProps) {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2">
             {(
               [
                 { key: "ALL", label: "الكل" },
@@ -134,7 +145,7 @@ export function SalesClient({ sales }: SalesClientProps) {
                 type="button"
                 onClick={() => setStatusFilter(tab.key)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  "rounded-lg px-2.5 py-2 text-xs font-medium transition-colors sm:px-3 sm:py-1.5",
                   statusFilter === tab.key
                     ? "bg-emerald-50 text-emerald-700"
                     : "text-slate-500 hover:bg-slate-100"
@@ -154,161 +165,276 @@ export function SalesClient({ sales }: SalesClientProps) {
             actionHref="/sales/new"
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50/80">
-                <tr>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    رقم الفاتورة
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    التاريخ
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    المنتجات
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    المجموع الفرعي
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الضريبة
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    تكلفة مباشرة
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الإجمالي النهائي
-                  </th>
-                  <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الحالة
-                  </th>
-                  <th className="px-4 py-3.5 text-end text-xs font-semibold text-slate-500">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv) => (
-                  <tr
-                    key={inv.id}
-                    className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
-                  >
-                    <td className="tabular-nums whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
-                      <span dir="ltr" className="inline-block">
-                        {inv.invoiceNumber}
+          <>
+            <div className="divide-y divide-slate-100 md:hidden">
+              {filtered.map((inv) => (
+                <div key={inv.id} className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          dir="ltr"
+                          className="tabular-nums inline-block text-sm font-bold text-slate-900"
+                        >
+                          {inv.invoiceNumber}
+                        </span>
+                        {renderStatusBadge(inv.paymentStatus)}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">{inv.date}</p>
+                    </div>
+                    <CurrencyDisplay
+                      amount={inv.totalAmount}
+                      className="text-base font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-slate-700">{inv.itemsSummary}</p>
+                    {inv.customerName && (
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        العميل: {inv.customerName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-2.5 text-xs">
+                    <div>
+                      <span className="block text-[11px] text-slate-400">
+                        قبل الضريبة
                       </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-500">
-                      {inv.date}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">
-                      <div>{inv.itemsSummary}</div>
-                      {inv.customerName && (
-                        <div className="text-xs text-slate-400">
-                          العميل: {inv.customerName}
-                        </div>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-sm">
                       <CurrencyDisplay
                         amount={inv.subtotal}
-                        className="text-sm font-normal text-slate-700"
+                        className="mt-0.5 text-xs font-semibold text-slate-700"
+                        currencyClassName="text-[11px]"
                       />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-sm">
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-400">
+                        الضريبة
+                      </span>
                       {inv.taxAmount > 0 ? (
-                        <div>
-                          <CurrencyDisplay
-                            amount={inv.taxAmount}
-                            className="text-sm font-normal text-slate-700"
-                          />
-                          <div className="text-[11px] text-slate-400">
-                            {inv.taxType === "PERCENTAGE"
-                              ? `${formatNumber(inv.taxValue)}%`
-                              : "ثابتة"}
-                          </div>
-                        </div>
+                        <CurrencyDisplay
+                          amount={inv.taxAmount}
+                          className="mt-0.5 text-xs font-semibold text-slate-700"
+                          currencyClassName="text-[11px]"
+                        />
                       ) : (
-                        <span className="text-xs text-slate-400">—</span>
+                        <span className="mt-0.5 block font-medium text-slate-400">
+                          —
+                        </span>
                       )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-sm">
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-400">
+                        شحن/مباشر
+                      </span>
                       <CurrencyDisplay
                         amount={inv.directCost}
-                        className="text-sm font-normal text-slate-600"
+                        className="mt-0.5 text-xs font-semibold text-slate-700"
+                        currencyClassName="text-[11px]"
                       />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-sm">
-                      <CurrencyDisplay amount={inv.totalAmount} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4">
-                      {inv.paymentStatus === "PAID" ? (
-                        <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                          مدفوع
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {inv.paymentStatus === "PENDING_COLLECTION" && (
+                      <button
+                        type="button"
+                        disabled={isPending && settlingId === inv.id}
+                        onClick={() =>
+                          handleSettleCod(inv.id, inv.invoiceNumber)
+                        }
+                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        <span>
+                          {isPending && settlingId === inv.id
+                            ? "جاري التحصيل..."
+                            : "تحصيل"}
                         </span>
-                      ) : (
-                        <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                          تحت التحصيل
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewInvoice(inv)}
+                      aria-label={`عرض تفاصيل فاتورة ${inv.invoiceNumber}`}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>عرض</span>
+                    </button>
+                    <Link
+                      href={`/sales/${inv.id}/edit`}
+                      prefetch={false}
+                      aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>تعديل</span>
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => setDeleteTarget(inv)}
+                      aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50/40 px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>حذف</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full">
+                <thead className="bg-slate-50/80">
+                  <tr>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      رقم الفاتورة
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      التاريخ
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      المنتجات
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      المجموع الفرعي
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الضريبة
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      تكلفة مباشرة
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الإجمالي النهائي
+                    </th>
+                    <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الحالة
+                    </th>
+                    <th className="px-4 py-3.5 text-end text-xs font-semibold text-slate-500">
+                      الإجراءات
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((inv) => (
+                    <tr
+                      key={inv.id}
+                      className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
+                    >
+                      <td className="tabular-nums whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
+                        <span dir="ltr" className="inline-block">
+                          {inv.invoiceNumber}
                         </span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-end">
-                      <div className="flex items-center justify-end gap-1">
-                        {inv.paymentStatus === "PENDING_COLLECTION" && (
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-500">
+                        {inv.date}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-700">
+                        <div>{inv.itemsSummary}</div>
+                        {inv.customerName && (
+                          <div className="text-xs text-slate-400">
+                            العميل: {inv.customerName}
+                          </div>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm">
+                        <CurrencyDisplay
+                          amount={inv.subtotal}
+                          className="text-sm font-normal text-slate-700"
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm">
+                        {inv.taxAmount > 0 ? (
+                          <div>
+                            <CurrencyDisplay
+                              amount={inv.taxAmount}
+                              className="text-sm font-normal text-slate-700"
+                            />
+                            <div className="text-[11px] text-slate-400">
+                              {inv.taxType === "PERCENTAGE"
+                                ? `${formatNumber(inv.taxValue)}%`
+                                : "ثابتة"}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm">
+                        <CurrencyDisplay
+                          amount={inv.directCost}
+                          className="text-sm font-normal text-slate-600"
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm">
+                        <CurrencyDisplay amount={inv.totalAmount} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4">
+                        {renderStatusBadge(inv.paymentStatus)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-end">
+                        <div className="flex items-center justify-end gap-1">
+                          {inv.paymentStatus === "PENDING_COLLECTION" && (
+                            <button
+                              type="button"
+                              disabled={isPending && settlingId === inv.id}
+                              onClick={() =>
+                                handleSettleCod(inv.id, inv.invoiceNumber)
+                              }
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                              <span>
+                                {isPending && settlingId === inv.id
+                                  ? "جاري التحصيل..."
+                                  : "تحصيل"}
+                              </span>
+                            </button>
+                          )}
                           <button
                             type="button"
-                            disabled={isPending && settlingId === inv.id}
-                            onClick={() =>
-                              handleSettleCod(inv.id, inv.invoiceNumber)
-                            }
-                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                            onClick={() => setPreviewInvoice(inv)}
+                            aria-label={`عرض تفاصيل فاتورة ${inv.invoiceNumber}`}
+                            title="تفاصيل وطباعة الفاتورة"
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
                           >
-                            <Check className="h-3.5 w-3.5" />
-                            <span>
-                              {isPending && settlingId === inv.id
-                                ? "جاري التحصيل..."
-                                : "تحصيل"}
-                            </span>
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setPreviewInvoice(inv)}
-                          aria-label={`عرض تفاصيل فاتورة ${inv.invoiceNumber}`}
-                          title="تفاصيل وطباعة الفاتورة"
-                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <Link
-                          href={`/sales/${inv.id}/edit`}
-                          prefetch={false}
-                          aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          <span>تعديل</span>
-                        </Link>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => setDeleteTarget(inv)}
-                          aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>حذف</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          <Link
+                            href={`/sales/${inv.id}/edit`}
+                            prefetch={false}
+                            aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>تعديل</span>
+                          </Link>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setDeleteTarget(inv)}
+                            aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>حذف</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 text-sm text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3.5 text-sm text-slate-500 sm:px-6 sm:py-4">
           <span>عرض {formatNumber(filtered.length)} فواتير</span>
         </div>
       </div>
@@ -318,14 +444,14 @@ export function SalesClient({ sales }: SalesClientProps) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px] print:static print:bg-white print:p-0"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 backdrop-blur-[2px] sm:p-4 print:static print:bg-white print:p-0"
           onClick={() => setPreviewInvoice(null)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl print:max-h-none print:shadow-none"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl sm:p-6 print:max-h-none print:shadow-none"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
                   تفاصيل فاتورة البيع{" "}

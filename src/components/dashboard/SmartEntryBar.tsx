@@ -426,13 +426,123 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
   const isInvoiceAction =
     preview?.action === "SALE" || preview?.action === "PURCHASE";
 
+  const renderProductSelector = (
+    item: AIParseItem,
+    idx: number,
+    isCreatingNew: boolean
+  ) => {
+    if (preview?.action === "PURCHASE") {
+      return (
+        <div className="space-y-1.5">
+          <select
+            value={
+              item.productId
+                ? item.productId
+                : isCreatingNew
+                  ? CREATE_NEW_VALUE
+                  : ""
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === CREATE_NEW_VALUE) {
+                updateItem(idx, {
+                  productId: null,
+                  createIfMissing: true,
+                });
+                return;
+              }
+              const picked = products.find((p) => p.id === val);
+              updateItem(idx, {
+                productId: picked?.id ?? null,
+                productName: picked?.name ?? item.productName,
+                createIfMissing: false,
+                unitPrice:
+                  item.unitPrice > 0
+                    ? item.unitPrice
+                    : picked?.averageCostPrice ?? 0,
+              });
+            }}
+            className="h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none md:min-w-[190px]"
+          >
+            <option value={CREATE_NEW_VALUE}>
+              + إنشاء منتج جديد: {item.productName}
+            </option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} (متاح: {p.stockQuantity})
+              </option>
+            ))}
+          </select>
+          {isCreatingNew && (
+            <input
+              type="text"
+              value={item.productName}
+              onChange={(e) =>
+                updateItem(idx, {
+                  productName: e.target.value,
+                })
+              }
+              placeholder="اسم المنتج الجديد"
+              className="h-9 w-full rounded-md border border-emerald-300 bg-emerald-50/40 px-2.5 text-xs text-slate-800 focus:border-emerald-500 focus:outline-none"
+            />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <select
+          value={item.productId ?? ""}
+          onChange={(e) => {
+            const picked = products.find((p) => p.id === e.target.value);
+            updateItem(idx, {
+              productId: picked?.id ?? null,
+              productName: picked?.name ?? item.productName,
+              unitPrice:
+                item.unitPrice > 0
+                  ? item.unitPrice
+                  : picked?.sellingPrice ?? 0,
+            });
+          }}
+          className={cn(
+            "h-9 w-full rounded-md border px-2.5 text-sm focus:border-emerald-500 focus:outline-none md:min-w-[180px]",
+            item.productId
+              ? "border-slate-300 bg-white text-slate-800"
+              : "border-amber-400 bg-amber-50 text-amber-900"
+          )}
+        >
+          <option value="">
+            اختر المنتج (المذكور: {item.productName})
+          </option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} (متاح: {p.stockQuantity})
+            </option>
+          ))}
+        </select>
+        {!item.productId && (
+          <p className="mt-1 text-xs text-amber-700">
+            هذا الصنف غير مسجل بالمخزن — اختر صنفاً مطابقاً أو{" "}
+            <Link
+              href="/purchases/new"
+              className="font-semibold underline hover:text-amber-900"
+            >
+              أدخله عبر فاتورة شراء أولاً
+            </Link>
+          </p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <section aria-label="المساعد الذكي لإدخال العمليات">
       <form
         onSubmit={handleAnalyze}
-        className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15"
+        className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm transition-colors focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 sm:gap-2 sm:p-2"
       >
-        <Sparkles className="ms-2 h-5 w-5 shrink-0 text-emerald-600" />
+        <Sparkles className="ms-1.5 h-5 w-5 shrink-0 text-emerald-600 sm:ms-2" />
         <input
           type="text"
           value={inputText}
@@ -441,8 +551,8 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
             if (!preview && confirmError) setConfirmError(null);
           }}
           disabled={isAnalyzing || isSaving}
-          placeholder="اكتب أو سجّل عملية بالعربي... (مثال: ضيف في المخزن ايفون 17 برو 30 وحدة بسعر 50000)"
-          className="flex-1 border-none bg-transparent py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-60 sm:text-base"
+          placeholder="اكتب عملية بالعربي... (مثال: شراء 50 رزمة ورق طباعة بسعر 150)"
+          className="min-w-0 flex-1 border-none bg-transparent py-2 text-base text-slate-900 placeholder:text-xs placeholder:text-slate-400 focus:outline-none disabled:opacity-60 sm:placeholder:text-sm"
         />
         <button
           type="button"
@@ -461,18 +571,19 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
         </button>
         <button
           type="submit"
+          aria-label={isAnalyzing ? "جاري التحليل" : "إرسال"}
           disabled={!inputText.trim() || isAnalyzing || isSaving}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
         >
           {isAnalyzing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>جاري التحليل...</span>
+              <span className="hidden sm:inline">جاري التحليل...</span>
             </>
           ) : (
             <>
               <Send className="h-4 w-4" />
-              <span>إرسال</span>
+              <span className="hidden sm:inline">إرسال</span>
             </>
           )}
         </button>
@@ -489,7 +600,7 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
       )}
 
       {preview && (
-        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/70 pb-3">
             <div className="flex items-center gap-2">
               {preview.action === "ADD_PRODUCT" ? (
@@ -528,7 +639,7 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
                     onChange={(e) =>
                       updateProductFields({ name: e.target.value })
                     }
-                    placeholder="مثال: آيفون 17 برو"
+                    placeholder="مثال: رزمة ورق طباعة A4"
                     className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
@@ -709,146 +820,30 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
                     أو اكتب عملية الشراء في الشات.
                   </div>
                 ) : (
-                  <div className="mt-4 overflow-x-auto rounded-lg border border-emerald-100 bg-white">
-                    <table className="w-full text-sm">
-                      <thead className="bg-slate-50/80 text-xs font-semibold text-slate-500">
-                        <tr>
-                          <th className="px-4 py-2.5 text-start">المنتج</th>
-                          <th className="px-4 py-2.5 text-start">الكمية</th>
-                          <th className="px-4 py-2.5 text-start">
-                            {preview.action === "PURCHASE"
-                              ? "تكلفة الوحدة"
-                              : "سعر البيع"}
-                          </th>
-                          {preview.action === "PURCHASE" &&
-                            (preview.items ?? []).some(
-                              (i) => i.createIfMissing
-                            ) && (
-                              <th className="px-4 py-2.5 text-start">
-                                سعر البيع للمنتج الجديد
-                              </th>
-                            )}
-                          <th className="px-4 py-2.5 text-end">الإجمالي</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(preview.items ?? []).map((item, idx) => {
-                          const isCreatingNew =
-                            preview.action === "PURCHASE" &&
-                            Boolean(item.createIfMissing) &&
-                            !item.productId;
+                  <>
+                    <div className="mt-4 space-y-3 md:hidden">
+                      {(preview.items ?? []).map((item, idx) => {
+                        const isCreatingNew =
+                          preview.action === "PURCHASE" &&
+                          Boolean(item.createIfMissing) &&
+                          !item.productId;
+                        return (
+                          <div
+                            key={idx}
+                            className="space-y-3 rounded-lg border border-emerald-100 bg-white p-3.5"
+                          >
+                            <div>
+                              <span className="mb-1 block text-xs font-medium text-slate-500">
+                                المنتج
+                              </span>
+                              {renderProductSelector(item, idx, isCreatingNew)}
+                            </div>
 
-                          return (
-                            <tr key={idx} className="border-t border-slate-100">
-                              <td className="px-4 py-2.5">
-                                {preview.action === "PURCHASE" ? (
-                                  <div className="space-y-1.5">
-                                    <select
-                                      value={
-                                        item.productId
-                                          ? item.productId
-                                          : isCreatingNew
-                                            ? CREATE_NEW_VALUE
-                                            : ""
-                                      }
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === CREATE_NEW_VALUE) {
-                                          updateItem(idx, {
-                                            productId: null,
-                                            createIfMissing: true,
-                                          });
-                                          return;
-                                        }
-                                        const picked = products.find(
-                                          (p) => p.id === val
-                                        );
-                                        updateItem(idx, {
-                                          productId: picked?.id ?? null,
-                                          productName:
-                                            picked?.name ?? item.productName,
-                                          createIfMissing: false,
-                                          unitPrice:
-                                            item.unitPrice > 0
-                                              ? item.unitPrice
-                                              : picked?.averageCostPrice ?? 0,
-                                        });
-                                      }}
-                                      className="h-9 w-full min-w-[190px] rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                                    >
-                                      <option value={CREATE_NEW_VALUE}>
-                                        + إنشاء منتج جديد: {item.productName}
-                                      </option>
-                                      {products.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                          {p.name} (متاح: {p.stockQuantity})
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {isCreatingNew && (
-                                      <input
-                                        type="text"
-                                        value={item.productName}
-                                        onChange={(e) =>
-                                          updateItem(idx, {
-                                            productName: e.target.value,
-                                          })
-                                        }
-                                        placeholder="اسم المنتج الجديد"
-                                        className="h-8 w-full rounded-md border border-emerald-300 bg-emerald-50/40 px-2.5 text-xs text-slate-800 focus:border-emerald-500 focus:outline-none"
-                                      />
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <select
-                                      value={item.productId ?? ""}
-                                      onChange={(e) => {
-                                        const picked = products.find(
-                                          (p) => p.id === e.target.value
-                                        );
-                                        updateItem(idx, {
-                                          productId: picked?.id ?? null,
-                                          productName:
-                                            picked?.name ?? item.productName,
-                                          unitPrice:
-                                            item.unitPrice > 0
-                                              ? item.unitPrice
-                                              : picked?.sellingPrice ?? 0,
-                                        });
-                                      }}
-                                      className={cn(
-                                        "h-9 w-full min-w-[180px] rounded-md border px-2.5 text-sm focus:border-emerald-500 focus:outline-none",
-                                        item.productId
-                                          ? "border-slate-300 bg-white text-slate-800"
-                                          : "border-amber-400 bg-amber-50 text-amber-900"
-                                      )}
-                                    >
-                                      <option value="">
-                                        اختر المنتج (المذكور: {item.productName})
-                                      </option>
-                                      {products.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                          {p.name} (متاح: {p.stockQuantity})
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {!item.productId && (
-                                      <p className="mt-1 text-xs text-amber-700">
-                                        هذا الصنف غير مسجل بالمخزن — اختر صنفاً
-                                        مطابقاً أو{" "}
-                                        <Link
-                                          href="/purchases/new"
-                                          className="font-semibold underline hover:text-amber-900"
-                                        >
-                                          أدخله عبر فاتورة شراء أولاً
-                                        </Link>
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-4 py-2.5">
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                  الكمية
+                                </label>
                                 <input
                                   type="number"
                                   min="1"
@@ -861,10 +856,15 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
                                       ),
                                     })
                                   }
-                                  className="tabular-nums h-9 w-24 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                                  className="tabular-nums h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
                                 />
-                              </td>
-                              <td className="px-4 py-2.5">
+                              </div>
+                              <div>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                  {preview.action === "PURCHASE"
+                                    ? "تكلفة الوحدة"
+                                    : "سعر البيع"}
+                                </label>
                                 <input
                                   type="number"
                                   min="0"
@@ -878,51 +878,160 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
                                       ),
                                     })
                                   }
-                                  className="tabular-nums h-9 w-28 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                                  className="tabular-nums h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
                                 />
-                              </td>
-                              {preview.action === "PURCHASE" &&
-                                (preview.items ?? []).some(
-                                  (i) => i.createIfMissing
-                                ) && (
-                                  <td className="px-4 py-2.5">
-                                    {isCreatingNew ? (
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={
-                                          item.sellingPrice ?? item.unitPrice
-                                        }
-                                        onChange={(e) =>
-                                          updateItem(idx, {
-                                            sellingPrice: Math.max(
-                                              0,
-                                              Number(e.target.value) || 0
-                                            ),
-                                          })
-                                        }
-                                        className="tabular-nums h-9 w-28 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
-                                      />
-                                    ) : (
-                                      <span className="text-xs text-slate-400">
-                                        مسجل مسبقاً
-                                      </span>
-                                    )}
-                                  </td>
-                                )}
-                              <td className="px-4 py-2.5 text-end">
-                                <CurrencyDisplay
-                                  amount={item.quantity * item.unitPrice}
-                                  className="text-sm font-semibold text-slate-900"
+                              </div>
+                            </div>
+
+                            {isCreatingNew && (
+                              <div>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                  سعر البيع للمنتج الجديد
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={item.sellingPrice ?? item.unitPrice}
+                                  onChange={(e) =>
+                                    updateItem(idx, {
+                                      sellingPrice: Math.max(
+                                        0,
+                                        Number(e.target.value) || 0
+                                      ),
+                                    })
+                                  }
+                                  className="tabular-nums h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
                                 />
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
+                              <span className="text-slate-500">إجمالي البند</span>
+                              <CurrencyDisplay
+                                amount={item.quantity * item.unitPrice}
+                                className="text-sm font-semibold text-slate-900"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 hidden overflow-x-auto rounded-lg border border-emerald-100 bg-white md:block">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50/80 text-xs font-semibold text-slate-500">
+                          <tr>
+                            <th className="px-4 py-2.5 text-start">المنتج</th>
+                            <th className="px-4 py-2.5 text-start">الكمية</th>
+                            <th className="px-4 py-2.5 text-start">
+                              {preview.action === "PURCHASE"
+                                ? "تكلفة الوحدة"
+                                : "سعر البيع"}
+                            </th>
+                            {preview.action === "PURCHASE" &&
+                              (preview.items ?? []).some(
+                                (i) => i.createIfMissing
+                              ) && (
+                                <th className="px-4 py-2.5 text-start">
+                                  سعر البيع للمنتج الجديد
+                                </th>
+                              )}
+                            <th className="px-4 py-2.5 text-end">الإجمالي</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(preview.items ?? []).map((item, idx) => {
+                            const isCreatingNew =
+                              preview.action === "PURCHASE" &&
+                              Boolean(item.createIfMissing) &&
+                              !item.productId;
+
+                            return (
+                              <tr key={idx} className="border-t border-slate-100">
+                                <td className="px-4 py-2.5">
+                                  {renderProductSelector(
+                                    item,
+                                    idx,
+                                    isCreatingNew
+                                  )}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      updateItem(idx, {
+                                        quantity: Math.max(
+                                          1,
+                                          Number(e.target.value) || 1
+                                        ),
+                                      })
+                                    }
+                                    className="tabular-nums h-9 w-24 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                                  />
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={item.unitPrice}
+                                    onChange={(e) =>
+                                      updateItem(idx, {
+                                        unitPrice: Math.max(
+                                          0,
+                                          Number(e.target.value) || 0
+                                        ),
+                                      })
+                                    }
+                                    className="tabular-nums h-9 w-28 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                                  />
+                                </td>
+                                {preview.action === "PURCHASE" &&
+                                  (preview.items ?? []).some(
+                                    (i) => i.createIfMissing
+                                  ) && (
+                                    <td className="px-4 py-2.5">
+                                      {isCreatingNew ? (
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={
+                                            item.sellingPrice ?? item.unitPrice
+                                          }
+                                          onChange={(e) =>
+                                            updateItem(idx, {
+                                              sellingPrice: Math.max(
+                                                0,
+                                                Number(e.target.value) || 0
+                                              ),
+                                            })
+                                          }
+                                          className="tabular-nums h-9 w-28 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                                        />
+                                      ) : (
+                                        <span className="text-xs text-slate-400">
+                                          مسجل مسبقاً
+                                        </span>
+                                      )}
+                                    </td>
+                                  )}
+                                <td className="px-4 py-2.5 text-end">
+                                  <CurrencyDisplay
+                                    amount={item.quantity * item.unitPrice}
+                                    className="text-sm font-semibold text-slate-900"
+                                  />
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-emerald-100 bg-white p-4 sm:grid-cols-3">
@@ -982,8 +1091,8 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-emerald-200/70 pt-4">
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+          <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t border-emerald-200/70 pt-4 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-base font-bold text-slate-900 sm:justify-start">
               <span>
                 {preview.action === "ADD_PRODUCT"
                   ? "المبلغ المخصوم من الخزينة:"
@@ -992,12 +1101,12 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
               <CurrencyDisplay amount={computedTotal} className="text-lg" />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:gap-3">
               <button
                 type="button"
                 disabled={isSaving}
                 onClick={handleConfirm}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:px-6"
               >
                 {isSaving ? (
                   <>
@@ -1018,7 +1127,7 @@ export function SmartEntryBar({ products, safes }: SmartEntryBarProps) {
                   setPreview(null);
                   setConfirmError(null);
                 }}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60 sm:px-6"
               >
                 <X className="h-4 w-4" />
                 <span>إلغاء</span>
