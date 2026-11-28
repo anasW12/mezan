@@ -171,12 +171,14 @@ export async function GET() {
     ];
     styleHeaderRow(salesSheet);
     salesInvoices.forEach((inv) => {
-      const total = inv.totalAmount.gt(0)
-        ? inv.totalAmount.toNumber()
-        : inv.totalRevenue.toNumber();
-      const subtotal = inv.subtotal.gt(0)
-        ? inv.subtotal.toNumber()
-        : total;
+      const total =
+        inv.totalAmount.gt(0) || inv.subtotal.gt(0)
+          ? inv.totalAmount.toNumber()
+          : inv.totalRevenue.toNumber();
+      const subtotal =
+        inv.subtotal.gt(0) || inv.totalAmount.gt(0)
+          ? inv.subtotal.toNumber()
+          : inv.totalRevenue.toNumber();
       salesSheet.addRow({
         invoiceNumber: `#S-${inv.id.slice(-5).toUpperCase()}`,
         date: formatDate(inv.createdAt),

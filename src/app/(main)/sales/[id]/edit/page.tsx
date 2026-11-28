@@ -32,9 +32,10 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
     notFound();
   }
 
-  const totalAmount = invoice.totalAmount.gt(0)
-    ? invoice.totalAmount.toNumber()
-    : invoice.totalRevenue.toNumber();
+  const totalAmount =
+    invoice.totalAmount.gt(0) || invoice.subtotal.gt(0)
+      ? invoice.totalAmount.toNumber()
+      : invoice.totalRevenue.toNumber();
 
   const initialData: SalesInvoiceFormInitialData = {
     id: invoice.id,

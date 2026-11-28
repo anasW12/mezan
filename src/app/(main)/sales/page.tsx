@@ -18,12 +18,14 @@ export default async function SalesPage() {
   const invoices = await getSalesInvoicesByCompany(companyId);
 
   const serialized: SalesInvoiceRow[] = invoices.map((inv) => {
-    const totalAmount = inv.totalAmount.gt(0)
-      ? inv.totalAmount.toNumber()
-      : inv.totalRevenue.toNumber();
-    const subtotal = inv.subtotal.gt(0)
-      ? inv.subtotal.toNumber()
-      : totalAmount;
+    const totalAmount =
+      inv.totalAmount.gt(0) || inv.subtotal.gt(0)
+        ? inv.totalAmount.toNumber()
+        : inv.totalRevenue.toNumber();
+    const subtotal =
+      inv.subtotal.gt(0) || inv.totalAmount.gt(0)
+        ? inv.subtotal.toNumber()
+        : inv.totalRevenue.toNumber();
 
     return {
       id: inv.id,

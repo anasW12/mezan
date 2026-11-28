@@ -28,6 +28,16 @@ function summarizeItems(
   return entries.map((e) => `${e.quantity}× ${e.name}`).join("، ");
 }
 
+function resolveSaleTotalAmount(invoice: {
+  totalAmount: Prisma.Decimal;
+  subtotal: Prisma.Decimal;
+  totalRevenue: Prisma.Decimal;
+}): Prisma.Decimal {
+  return invoice.totalAmount.gt(0) || invoice.subtotal.gt(0)
+    ? invoice.totalAmount
+    : invoice.totalRevenue;
+}
+
 export async function getPurchaseInvoicesByCompany(companyId: string) {
   return prisma.purchaseInvoice.findMany({
     where: { companyId },
@@ -828,7 +838,7 @@ export async function createSaleForCompany(
           taxValue,
           taxAmount,
           totalAmount,
-          totalRevenue: totalAmount,
+          totalRevenue: subtotal,
           directCost,
           notes: input.notes || null,
           createdAt: resolveInvoiceCreatedAt(input.invoiceDate),
@@ -971,9 +981,7 @@ export async function updateSaleForCompany(
 
     const oldCashAmount =
       oldInvoice.paymentStatus === "PAID" && oldInvoice.safeId
-        ? oldInvoice.totalAmount.gt(0)
-          ? oldInvoice.totalAmount
-          : oldInvoice.totalRevenue
+        ? resolveSaleTotalAmount(oldInvoice)
         : new Prisma.Decimal(0);
     const newCashAmount =
       input.paymentStatus === "PAID" ? totalAmount : new Prisma.Decimal(0);
@@ -1043,7 +1051,7 @@ export async function updateSaleForCompany(
           taxValue,
           taxAmount,
           totalAmount,
-          totalRevenue: totalAmount,
+          totalRevenue: subtotal,
           directCost,
           notes: input.notes || null,
           createdAt: resolveInvoiceCreatedAt(
@@ -1108,9 +1116,7 @@ export async function deleteSaleForCompany(
       throw new BusinessRuleError("فاتورة البيع غير موجودة");
     }
 
-    const invoiceCashAmount = invoice.totalAmount.gt(0)
-      ? invoice.totalAmount
-      : invoice.totalRevenue;
+    const invoiceCashAmount = resolveSaleTotalAmount(invoice);
 
     if (invoice.paymentStatus === "PAID" && invoice.safeId) {
       if (invoice.safe && invoice.safe.balance.lt(invoiceCashAmount)) {
@@ -1198,9 +1204,7 @@ export async function settleSaleForCompany(
       throw new BusinessRuleError("لا توجد خزينة متاحة لإيداع التحصيل");
     }
 
-    const amountToCollect = invoice.totalAmount.gt(0)
-      ? invoice.totalAmount
-      : invoice.totalRevenue;
+    const amountToCollect = resolveSaleTotalAmount(invoice);
 
     const [updated] = await Promise.all([
       tx.salesInvoice.update({

@@ -24,9 +24,9 @@ export async function getDashboardData(companyId: string) {
         COALESCE((SELECT SUM("purchaseValue") FROM "FixedAsset" WHERE "companyId" = ${companyId}), 0) AS "fixedAssets",
         COALESCE((SELECT SUM(amount) FROM "GeneralExpense" WHERE "companyId" = ${companyId}), 0) AS "generalExpenses",
         COALESCE((SELECT SUM(amount) FROM "OwnerWithdrawal" WHERE "companyId" = ${companyId}), 0) AS "ownerWithdrawals",
-        COALESCE((SELECT SUM(CASE WHEN "totalAmount" > 0 THEN "totalAmount" ELSE "totalRevenue" END) FROM "SalesInvoice" WHERE "companyId" = ${companyId}), 0) AS "totalSalesRevenue",
+        COALESCE((SELECT SUM(CASE WHEN "subtotal" > 0 OR "totalAmount" > 0 THEN "subtotal" ELSE "totalRevenue" END) FROM "SalesInvoice" WHERE "companyId" = ${companyId}), 0) AS "totalSalesRevenue",
         COALESCE((SELECT SUM("directCost") FROM "SalesInvoice" WHERE "companyId" = ${companyId}), 0) AS "totalDirectCost",
-        COALESCE((SELECT SUM(CASE WHEN "totalAmount" > 0 THEN "totalAmount" ELSE "totalRevenue" END) FROM "SalesInvoice" WHERE "companyId" = ${companyId} AND "paymentStatus" = 'PENDING_COLLECTION'), 0) AS "fundsUnderCollection",
+        COALESCE((SELECT SUM(CASE WHEN "totalAmount" > 0 OR "subtotal" > 0 THEN "totalAmount" ELSE "totalRevenue" END) FROM "SalesInvoice" WHERE "companyId" = ${companyId} AND "paymentStatus" = 'PENDING_COLLECTION'), 0) AS "fundsUnderCollection",
         COALESCE((
           SELECT SUM(si."quantity"::numeric * si."unitCostSnapshot")
           FROM "SalesItem" AS si
@@ -50,8 +50,8 @@ export async function getDashboardData(companyId: string) {
   );
   const totalCogs = new Prisma.Decimal(row?.totalCogs ?? 0);
 
-  // Net Profit = Sales Revenue - COGS - Direct Costs - General Expenses
-  // Owner Withdrawals are strictly excluded.
+  // Net Profit = Sum(SalesInvoice.subtotal) - COGS - Sum(SalesInvoice.directCost) - Sum(GeneralExpense.amount)
+  // Collected tax (taxAmount) is excluded from revenue/profit; Owner Withdrawals are strictly excluded.
   const netProfit = totalSalesRevenue
     .minus(totalCogs)
     .minus(totalDirectCost)
