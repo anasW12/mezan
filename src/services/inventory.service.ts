@@ -1,28 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { prisma, runTransaction } from "@/lib/prisma";
+import { calculateWeightedAverageCost } from "@/lib/accounting-math";
 import { BusinessRuleError } from "@/lib/action-utils";
 import { writeAuditLog } from "@/services/audit.service";
 import type { ProductUpdateInput } from "@/lib/validations/inventory";
 
-/**
- * Weighted Average Cost Price formula:
- * New Avg Cost = ((Old Qty * Old Avg Cost) + (New Qty * New Unit Cost)) / (Old Qty + New Qty)
- */
-export function calculateWeightedAverageCost(
-  oldQty: number,
-  oldAvgCost: Prisma.Decimal,
-  newQty: number,
-  newUnitCost: Prisma.Decimal
-): Prisma.Decimal {
-  const totalQty = oldQty + newQty;
-  if (totalQty <= 0) {
-    return newUnitCost;
-  }
-
-  const oldTotalValue = oldAvgCost.mul(oldQty);
-  const newTotalValue = newUnitCost.mul(newQty);
-  return oldTotalValue.plus(newTotalValue).div(totalQty);
-}
+export { calculateWeightedAverageCost };
 
 export async function getProductsByCompany(companyId: string) {
   return prisma.product.findMany({

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const optionalDateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: "صيغة التاريخ غير صالحة" })
+  .optional()
+  .or(z.literal("").transform(() => undefined));
+
 export const purchaseItemSchema = z
   .object({
     productId: z.string().trim().optional(),
@@ -34,9 +41,14 @@ export const purchaseSchema = z.object({
   safeId: z.string().trim().min(1, { error: "يرجى اختيار الخزينة" }),
   supplierName: z.string().trim().max(150).optional(),
   notes: z.string().trim().max(500).optional(),
+  invoiceDate: optionalDateSchema,
   items: z
     .array(purchaseItemSchema)
     .min(1, { error: "يرجى إضافة منتج واحد على الأقل" }),
+});
+
+export const updatePurchaseSchema = purchaseSchema.extend({
+  id: z.string().trim().min(1, { error: "معرف الفاتورة مطلوب" }),
 });
 
 export const saleItemSchema = z.object({
@@ -50,29 +62,62 @@ export const saleItemSchema = z.object({
     .min(0, { error: "سعر البيع لا يمكن أن يكون سالباً" }),
 });
 
-export const saleSchema = z
-  .object({
-    paymentStatus: z.enum(["PAID", "PENDING_COLLECTION"]),
-    safeId: z.string().trim().optional(),
-    customerName: z.string().trim().max(150).optional(),
-    directCost: z.coerce
-      .number({ error: "التكلفة المباشرة غير صالحة" })
-      .min(0, { error: "التكلفة المباشرة لا يمكن أن تكون سالبة" })
-      .default(0),
-    notes: z.string().trim().max(500).optional(),
-    items: z
-      .array(saleItemSchema)
-      .min(1, { error: "يرجى إضافة منتج واحد على الأقل" }),
-  })
-  .refine(
-    (data) =>
-      data.paymentStatus === "PENDING_COLLECTION" ||
-      (typeof data.safeId === "string" && data.safeId.length > 0),
-    {
-      error: "يرجى اختيار الخزينة المستلمة للدفع النقدي",
+const saleBaseSchema = z.object({
+  paymentStatus: z.enum(["PAID", "PENDING_COLLECTION"]),
+  safeId: z.string().trim().optional(),
+  customerName: z.string().trim().max(150).optional(),
+  directCost: z.coerce
+    .number({ error: "التكلفة المباشرة غير صالحة" })
+    .min(0, { error: "التكلفة المباشرة لا يمكن أن تكون سالبة" })
+    .default(0),
+  taxType: z.enum(["PERCENTAGE", "FIXED"]).default("PERCENTAGE"),
+  taxValue: z.coerce
+    .number({ error: "قيمة الضريبة غير صالحة" })
+    .min(0, { error: "قيمة الضريبة لا يمكن أن تكون سالبة" })
+    .default(0),
+  notes: z.string().trim().max(500).optional(),
+  invoiceDate: optionalDateSchema,
+  items: z
+    .array(saleItemSchema)
+    .min(1, { error: "يرجى إضافة منتج واحد على الأقل" }),
+});
+
+function validateSaleSafeAndTax(
+  data: {
+    paymentStatus: "PAID" | "PENDING_COLLECTION";
+    safeId?: string;
+    taxType: "PERCENTAGE" | "FIXED";
+    taxValue: number;
+  },
+  ctx: z.RefinementCtx
+) {
+  if (
+    data.paymentStatus === "PAID" &&
+    (!data.safeId || data.safeId.trim().length === 0)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "يرجى اختيار الخزينة المستلمة للدفع النقدي",
       path: ["safeId"],
-    }
-  );
+    });
+  }
+
+  if (data.taxType === "PERCENTAGE" && data.taxValue > 100) {
+    ctx.addIssue({
+      code: "custom",
+      message: "نسبة الضريبة لا يمكن أن تتجاوز ١٠٠٪",
+      path: ["taxValue"],
+    });
+  }
+}
+
+export const saleSchema = saleBaseSchema.superRefine(validateSaleSafeAndTax);
+
+export const updateSaleSchema = saleBaseSchema
+  .extend({
+    id: z.string().trim().min(1, { error: "معرف الفاتورة مطلوب" }),
+  })
+  .superRefine(validateSaleSafeAndTax);
 
 export const settleSaleSchema = z.object({
   invoiceId: z.string().trim().min(1, { error: "معرف الفاتورة مطلوب" }),
@@ -108,8 +153,16 @@ export const recordIdSchema = z.object({
   id: z.string().trim().min(1, { error: "المعرف مطلوب" }),
 });
 
-export type PurchaseInput = z.infer<typeof purchaseSchema>;
-export type SaleInput = z.infer<typeof saleSchema>;
+export type PurchaseInput = z.input<typeof purchaseSchema>;
+export type ParsedPurchaseInput = z.output<typeof purchaseSchema>;
+export type UpdatePurchaseInput = z.input<typeof updatePurchaseSchema>;
+export type ParsedUpdatePurchaseInput = z.output<typeof updatePurchaseSchema>;
+export type SaleInput = z.input<typeof saleSchema>;
+export type ParsedSaleInput = z.output<typeof saleSchema>;
+export type UpdateSaleInput = z.input<typeof updateSaleSchema>;
+export type ParsedUpdateSaleInput = z.output<typeof updateSaleSchema>;
 export type SettleSaleInput = z.infer<typeof settleSaleSchema>;
-export type ExpenseInput = z.infer<typeof expenseSchema>;
-export type WithdrawalInput = z.infer<typeof withdrawalSchema>;
+export type ExpenseInput = z.input<typeof expenseSchema>;
+export type ParsedExpenseInput = z.output<typeof expenseSchema>;
+export type WithdrawalInput = z.input<typeof withdrawalSchema>;
+export type ParsedWithdrawalInput = z.output<typeof withdrawalSchema>;

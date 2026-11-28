@@ -12,11 +12,15 @@ import {
   recordIdSchema,
   saleSchema,
   settleSaleSchema,
+  updatePurchaseSchema,
+  updateSaleSchema,
   withdrawalSchema,
   type ExpenseInput,
   type PurchaseInput,
   type SaleInput,
   type SettleSaleInput,
+  type UpdatePurchaseInput,
+  type UpdateSaleInput,
   type WithdrawalInput,
 } from "@/lib/validations/accounting";
 import {
@@ -25,8 +29,12 @@ import {
   createSaleForCompany,
   createWithdrawalForCompany,
   deleteExpenseForCompany,
+  deletePurchaseForCompany,
+  deleteSaleForCompany,
   deleteWithdrawalForCompany,
   settleSaleForCompany,
+  updatePurchaseForCompany,
+  updateSaleForCompany,
 } from "@/services/accounting.service";
 
 function revalidateAccountingRoutes() {
@@ -65,6 +73,51 @@ export async function createPurchaseAction(
   }
 }
 
+export async function updatePurchaseAction(
+  input: UpdatePurchaseInput
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const companyId = await requireTenantCompanyId();
+    const parsed = updatePurchaseSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "بيانات تعديل فاتورة الشراء غير صالحة",
+      };
+    }
+
+    const invoice = await updatePurchaseForCompany(companyId, parsed.data);
+    revalidateAccountingRoutes();
+    revalidatePath(`/purchases/${invoice.id}/edit`);
+
+    return { success: true, data: { id: invoice.id } };
+  } catch (error) {
+    return formatActionError(error);
+  }
+}
+
+export async function deletePurchaseAction(id: string): Promise<ActionResult> {
+  try {
+    const companyId = await requireTenantCompanyId();
+    const parsed = recordIdSchema.safeParse({ id });
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "معرف فاتورة الشراء غير صالح",
+      };
+    }
+
+    await deletePurchaseForCompany(companyId, parsed.data.id);
+    revalidateAccountingRoutes();
+
+    return { success: true };
+  } catch (error) {
+    return formatActionError(error);
+  }
+}
+
 export async function createSaleAction(
   input: SaleInput
 ): Promise<ActionResult<{ id: string }>> {
@@ -83,6 +136,51 @@ export async function createSaleAction(
     revalidateAccountingRoutes();
 
     return { success: true, data: { id: invoice.id } };
+  } catch (error) {
+    return formatActionError(error);
+  }
+}
+
+export async function updateSaleAction(
+  input: UpdateSaleInput
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const companyId = await requireTenantCompanyId();
+    const parsed = updateSaleSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "بيانات تعديل فاتورة البيع غير صالحة",
+      };
+    }
+
+    const invoice = await updateSaleForCompany(companyId, parsed.data);
+    revalidateAccountingRoutes();
+    revalidatePath(`/sales/${invoice.id}/edit`);
+
+    return { success: true, data: { id: invoice.id } };
+  } catch (error) {
+    return formatActionError(error);
+  }
+}
+
+export async function deleteSaleAction(id: string): Promise<ActionResult> {
+  try {
+    const companyId = await requireTenantCompanyId();
+    const parsed = recordIdSchema.safeParse({ id });
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "معرف فاتورة البيع غير صالح",
+      };
+    }
+
+    await deleteSaleForCompany(companyId, parsed.data.id);
+    revalidateAccountingRoutes();
+
+    return { success: true };
   } catch (error) {
     return formatActionError(error);
   }

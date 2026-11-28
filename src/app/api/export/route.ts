@@ -164,11 +164,19 @@ export async function GET() {
       { header: "الحالة", key: "status", width: 16 },
       { header: "الخزينة", key: "safe", width: 20 },
       { header: "الأصناف", key: "items", width: 35 },
+      { header: "المجموع الفرعي", key: "subtotal", width: 18 },
+      { header: "الضريبة", key: "taxAmount", width: 16 },
       { header: "التكلفة المباشرة", key: "directCost", width: 18 },
       { header: "الإجمالي", key: "total", width: 18 },
     ];
     styleHeaderRow(salesSheet);
     salesInvoices.forEach((inv) => {
+      const total = inv.totalAmount.gt(0)
+        ? inv.totalAmount.toNumber()
+        : inv.totalRevenue.toNumber();
+      const subtotal = inv.subtotal.gt(0)
+        ? inv.subtotal.toNumber()
+        : total;
       salesSheet.addRow({
         invoiceNumber: `#S-${inv.id.slice(-5).toUpperCase()}`,
         date: formatDate(inv.createdAt),
@@ -176,8 +184,10 @@ export async function GET() {
         status: inv.paymentStatus === "PAID" ? "مدفوع" : "تحت التحصيل",
         safe: inv.safe?.name ?? "—",
         items: formatInvoiceItemsSummary(inv.items),
+        subtotal,
+        taxAmount: inv.taxAmount.toNumber(),
         directCost: inv.directCost.toNumber(),
-        total: inv.totalRevenue.toNumber(),
+        total,
       });
     });
 
