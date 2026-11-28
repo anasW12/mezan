@@ -277,7 +277,9 @@ export function SettingsClient({
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">الإعدادات</h2>
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+          الإعدادات
+        </h2>
         <p className="mt-1 text-sm text-slate-500">
           إدارة بيانات الشركة، الخزائن والأرصدة الافتتاحية، والأصول الثابتة.
         </p>
@@ -286,7 +288,7 @@ export function SettingsClient({
       {/* Company Details */}
       <form
         onSubmit={handleSaveCompany}
-        className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
+        className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6"
       >
         <div className="mb-4 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
@@ -326,7 +328,7 @@ export function SettingsClient({
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+            className="min-h-[44px] w-full rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:w-auto"
           >
             {isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
           </button>
@@ -334,7 +336,7 @@ export function SettingsClient({
       </form>
 
       {/* Safes */}
-      <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
             <Vault className="h-5 w-5" />
@@ -348,7 +350,7 @@ export function SettingsClient({
           {safes.map((safe) => (
             <div
               key={safe.id}
-              className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3.5 py-3 sm:px-4"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-sm font-medium text-slate-800">
@@ -367,14 +369,14 @@ export function SettingsClient({
 
         <form
           onSubmit={handleAddSafe}
-          className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-12"
+          className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-12"
         >
           <input
             type="text"
             value={newSafeName}
             onChange={(e) => setNewSafeName(e.target.value)}
             placeholder="اسم خزينة جديدة (مثال: فودافون كاش)"
-            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-6"
+            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-6"
           />
           <input
             type="number"
@@ -383,12 +385,12 @@ export function SettingsClient({
             value={newSafeBalance}
             onChange={(e) => setNewSafeBalance(e.target.value)}
             placeholder="رصيد افتتاحي (اختياري)"
-            className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
+            className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-3"
           />
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:col-span-3"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:col-span-2 md:col-span-3"
           >
             <Plus className="h-4 w-4" />
             <span>إضافة خزينة</span>
@@ -404,11 +406,11 @@ export function SettingsClient({
             <h4 className="mb-3 text-sm font-semibold text-slate-800">
               إيداع رأس مال أو تسوية رصيد خزينة
             </h4>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-12">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-12">
               <select
                 value={adjustSafeId}
                 onChange={(e) => setAdjustSafeId(e.target.value)}
-                className="h-10 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
+                className="h-10 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-3"
               >
                 {safes.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -421,7 +423,7 @@ export function SettingsClient({
                 onChange={(e) =>
                   setAdjustDirection(e.target.value as "ADD" | "SUB")
                 }
-                className="h-10 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-2"
+                className="h-10 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-2"
               >
                 <option value="ADD">إيداع (+)</option>
                 <option value="SUB">خصم (-)</option>
@@ -433,19 +435,19 @@ export function SettingsClient({
                 value={adjustAmount}
                 onChange={(e) => setAdjustAmount(e.target.value)}
                 placeholder="المبلغ"
-                className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-2"
+                className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-2"
               />
               <input
                 type="text"
                 value={adjustReason}
                 onChange={(e) => setAdjustReason(e.target.value)}
                 placeholder="السبب (مثال: رصيد افتتاحي)"
-                className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
+                className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-3"
               />
               <button
                 type="submit"
                 disabled={isPending}
-                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 sm:col-span-2"
+                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 sm:col-span-2 md:col-span-2"
               >
                 تطبيق
               </button>
@@ -455,7 +457,7 @@ export function SettingsClient({
       </div>
 
       {/* Fixed Assets */}
-      <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
             <Landmark className="h-5 w-5" />
@@ -470,7 +472,7 @@ export function SettingsClient({
             {fixedAssets.map((asset) => (
               <div
                 key={asset.id}
-                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3.5 py-3 sm:px-4"
               >
                 <div>
                   <div className="text-sm font-medium text-slate-800">
@@ -502,14 +504,14 @@ export function SettingsClient({
 
         <form
           onSubmit={handleAddAsset}
-          className="grid grid-cols-1 gap-2.5 sm:grid-cols-12"
+          className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-12"
         >
           <input
             type="text"
             value={assetName}
             onChange={(e) => setAssetName(e.target.value)}
             placeholder="اسم الأصل (مثال: أجهزة كمبيوتر ومعدات)"
-            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-5"
+            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-2 md:col-span-5"
           />
           <input
             type="number"
@@ -518,18 +520,18 @@ export function SettingsClient({
             value={assetValue}
             onChange={(e) => setAssetValue(e.target.value)}
             placeholder="القيمة (ج.م)"
-            className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-2"
+            className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-2"
           />
           <input
             type="date"
             value={assetDate}
             onChange={(e) => setAssetDate(e.target.value)}
-            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
+            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 md:col-span-3"
           />
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:col-span-2"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:col-span-2 md:col-span-2"
           >
             <Plus className="h-4 w-4" />
             <span>إضافة</span>
@@ -540,7 +542,7 @@ export function SettingsClient({
       {/* Account Security & Password */}
       <form
         onSubmit={handlePasswordSubmit}
-        className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
+        className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6"
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -696,7 +698,7 @@ export function SettingsClient({
           <button
             type="submit"
             disabled={isPasswordPending}
-            className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+            className="min-h-[44px] w-full rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:w-auto"
           >
             {isPasswordPending
               ? "جاري التحديث..."
@@ -708,7 +710,7 @@ export function SettingsClient({
       </form>
 
       {/* Export Data */}
-      <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col items-stretch justify-between gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:p-6">
         <div>
           <h3 className="text-base font-semibold text-slate-900">
             تصدير البيانات (Excel)
@@ -721,7 +723,7 @@ export function SettingsClient({
           type="button"
           disabled={isExporting}
           onClick={handleExport}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Download className="h-4 w-4 text-emerald-600" />
           <span>{isExporting ? "جاري التجهيز..." : "تصدير Excel"}</span>

@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="fixed bottom-20 start-4 z-50 flex flex-col gap-2.5 lg:bottom-6 lg:start-6"
+        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] start-3.5 end-3.5 z-50 flex flex-col gap-2.5 sm:start-6 sm:end-auto sm:max-w-md lg:bottom-6"
       >
         {toasts.map((toast) => (
           <div
@@ -69,12 +69,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             ) : (
               <XCircle className="h-5 w-5 shrink-0 text-rose-500" />
             )}
-            <p className="text-sm font-medium text-slate-700">{toast.message}</p>
+            <p className="flex-1 break-words text-sm font-medium text-slate-700">
+              {toast.message}
+            </p>
             <button
               type="button"
               onClick={() => dismiss(toast.id)}
               aria-label="إغلاق الإشعار"
-              className="ms-2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              className="ms-1 shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
               <X className="h-4 w-4" />
             </button>

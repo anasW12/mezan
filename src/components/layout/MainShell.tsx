@@ -23,9 +23,9 @@ export function MainShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="bg-calm-canvas min-h-screen">
+    <div className="bg-calm-canvas flex min-h-screen">
       <Sidebar />
-      <div className="flex min-h-screen flex-col lg:ps-64">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:ps-64">
         <Header
           onOpenMobileMenu={() => setDrawerOpen(true)}
           userName={userName}
@@ -33,13 +33,14 @@ export function MainShell({
           companyName={companyName}
           isAdmin={isAdmin}
         />
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-24 sm:p-6 lg:pb-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3.5 py-4 pb-24 sm:p-6 lg:pb-8">
           {children}
         </main>
       </div>
       <MobileNav
         drawerOpen={drawerOpen}
         onCloseDrawer={() => setDrawerOpen(false)}
+        companyName={companyName}
       />
     </div>
   );

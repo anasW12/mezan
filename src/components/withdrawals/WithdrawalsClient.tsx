@@ -76,11 +76,11 @@ export function WithdrawalsClient({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
           المسحوبات الشخصية
         </h2>
-        <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-3.5 py-2 text-xs font-medium text-slate-600">
-          <Info className="h-4 w-4 shrink-0 text-sky-500" />
+        <div className="mt-2 inline-flex items-start gap-2 rounded-lg border border-slate-200 bg-white/80 px-3.5 py-2 text-xs font-medium text-slate-600 sm:items-center">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-500 sm:mt-0" />
           <span>
             المسحوبات الشخصية تُخصم من الخزينة ولا تؤثر على صافي ربح الشركة.
           </span>
@@ -89,9 +89,9 @@ export function WithdrawalsClient({
 
       <form
         onSubmit={handleAdd}
-        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:grid-cols-12 sm:items-end"
+        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:grid-cols-2 md:grid-cols-12 md:items-end"
       >
-        <div className="sm:col-span-5">
+        <div className="sm:col-span-2 md:col-span-5">
           <label className="mb-1.5 block text-xs font-medium text-slate-600">
             وصف السحب
           </label>
@@ -104,7 +104,7 @@ export function WithdrawalsClient({
           />
         </div>
 
-        <div className="sm:col-span-3">
+        <div className="md:col-span-3">
           <label className="mb-1.5 block text-xs font-medium text-slate-600">
             المبلغ (ج.م)
           </label>
@@ -119,7 +119,7 @@ export function WithdrawalsClient({
           />
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="md:col-span-2">
           <label className="mb-1.5 block text-xs font-medium text-slate-600">
             الخزينة
           </label>
@@ -136,7 +136,7 @@ export function WithdrawalsClient({
           </select>
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-2 md:col-span-2">
           <button
             type="submit"
             disabled={isPending || safes.length === 0}
@@ -155,67 +155,102 @@ export function WithdrawalsClient({
             description="ستظهر هنا جميع المسحوبات الشخصية المسجلة للمالك."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50/80">
-                <tr>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    التاريخ
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الوصف
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الخزينة
-                  </th>
-                  <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
-                    المبلغ
-                  </th>
-                  <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
-                    إجراء
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {withdrawals.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
-                  >
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {row.date}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-800">
-                      {row.description}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {row.safeName}
-                    </td>
-                    <td className="px-6 py-4 text-end text-sm">
-                      <CurrencyDisplay
-                        amount={-row.amount}
-                        tone="negative"
-                        className="text-sm font-semibold"
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-end">
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => setDeleteTarget(row)}
-                        aria-label={`حذف ${row.description}`}
-                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
+          <>
+            <div className="divide-y divide-slate-100 md:hidden">
+              {withdrawals.map((row) => (
+                <div key={row.id} className="space-y-2 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs text-slate-400">{row.date}</span>
+                    <CurrencyDisplay
+                      amount={-row.amount}
+                      tone="negative"
+                      className="text-sm font-semibold"
+                    />
+                  </div>
+                  <p className="text-sm font-medium text-slate-800">
+                    {row.description}
+                  </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-slate-500">
+                      الخزينة: {row.safeName}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => setDeleteTarget(row)}
+                      aria-label={`حذف ${row.description}`}
+                      className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/40 px-2.5 py-1 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>حذف</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full">
+                <thead className="bg-slate-50/80">
+                  <tr>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      التاريخ
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الوصف
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الخزينة
+                    </th>
+                    <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
+                      المبلغ
+                    </th>
+                    <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
+                      إجراء
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {withdrawals.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
+                    >
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {row.date}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-800">
+                        {row.description}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {row.safeName}
+                      </td>
+                      <td className="px-6 py-4 text-end text-sm">
+                        <CurrencyDisplay
+                          amount={-row.amount}
+                          tone="negative"
+                          className="text-sm font-semibold"
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-end">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => setDeleteTarget(row)}
+                          aria-label={`حذف ${row.description}`}
+                          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
-        <div className="border-t border-slate-100 px-6 py-4 text-sm text-slate-500">
+        <div className="border-t border-slate-100 px-4 py-3.5 text-sm text-slate-500 sm:px-6 sm:py-4">
           إجمالي السجلات: {formatNumber(withdrawals.length)}
         </div>
       </div>

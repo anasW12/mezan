@@ -58,11 +58,13 @@ export function RecentTransactions({
       aria-label="آخر  الحركات"
       className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm"
     >
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-        <h2 className="text-lg font-semibold text-slate-800">آخر  الحركات</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3.5 sm:px-6 sm:py-4">
+        <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
+          آخر الحركات
+        </h2>
         <Link
           href="/audit-logs"
-          className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700"
+          className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 transition-colors hover:text-emerald-700 sm:text-sm"
         >
           <span>عرض السجل الكامل</span>
           <ArrowLeft className="h-4 w-4" />
@@ -78,36 +80,14 @@ export function RecentTransactions({
           icon={<History className="h-7 w-7" />}
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50/70">
-              <tr>
-                <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
-                  الوقت
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
-                  النوع
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
-                  الوصف
-                </th>
-                <th className="px-6 py-3 text-end text-xs font-medium text-slate-400">
-                  المبلغ
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.slice(0, 10).map((tx) => {
-                const badge = AUDIT_ACTION_BADGES[tx.actionType];
-                return (
-                  <tr
-                    key={tx.id}
-                    className="border-b border-slate-50 transition-colors hover:bg-slate-50/60"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
-                      {tx.timeLabel}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
+        <>
+          <div className="divide-y divide-slate-100 md:hidden">
+            {transactions.slice(0, 10).map((tx) => {
+              const badge = AUDIT_ACTION_BADGES[tx.actionType];
+              return (
+                <div key={tx.id} className="space-y-2 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
                       <span
                         className={cn(
                           "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
@@ -116,24 +96,82 @@ export function RecentTransactions({
                       >
                         {badge.label}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-700">
-                      {tx.summary}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-end text-sm">
-                      <CurrencyDisplay
-                        amount={tx.amount}
-                        tone="auto"
-                        showSign
-                        className="text-sm font-medium"
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <span className="text-xs text-slate-400">
+                        {tx.timeLabel}
+                      </span>
+                    </div>
+                    <CurrencyDisplay
+                      amount={tx.amount}
+                      tone="auto"
+                      showSign
+                      className="text-sm font-semibold"
+                    />
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    {tx.summary}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full">
+              <thead className="bg-slate-50/70">
+                <tr>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
+                    الوقت
+                  </th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
+                    النوع
+                  </th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-400">
+                    الوصف
+                  </th>
+                  <th className="px-6 py-3 text-end text-xs font-medium text-slate-400">
+                    المبلغ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.slice(0, 10).map((tx) => {
+                  const badge = AUDIT_ACTION_BADGES[tx.actionType];
+                  return (
+                    <tr
+                      key={tx.id}
+                      className="border-b border-slate-50 transition-colors hover:bg-slate-50/60"
+                    >
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
+                        {tx.timeLabel}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                            badge.className
+                          )}
+                        >
+                          {badge.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-700">
+                        {tx.summary}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-end text-sm">
+                        <CurrencyDisplay
+                          amount={tx.amount}
+                          tone="auto"
+                          showSign
+                          className="text-sm font-medium"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

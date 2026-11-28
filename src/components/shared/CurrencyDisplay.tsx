@@ -43,7 +43,7 @@ export function CurrencyDisplay({
   return (
     <span
       className={cn(
-        "inline-flex items-baseline gap-1 tabular-nums font-semibold",
+        "inline-flex items-baseline gap-1 whitespace-nowrap tabular-nums font-semibold",
         resolvedTone === "positive" && "text-emerald-600",
         resolvedTone === "negative" && "text-rose-600",
         resolvedTone === "neutral" && "text-slate-900",

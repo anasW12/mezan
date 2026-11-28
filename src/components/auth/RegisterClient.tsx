@@ -83,7 +83,7 @@ export function RegisterClient({ isGoogleEnabled }: RegisterClientProps) {
         <BrandLogo href="/" />
       </div>
 
-      <div className="surface-glass w-full max-w-md rounded-2xl border border-slate-200/80 p-8 shadow-lg">
+      <div className="surface-glass w-full max-w-md rounded-2xl border border-slate-200/80 p-5 shadow-lg sm:p-8">
         <h1 className="mb-2 text-center text-2xl font-bold text-slate-900">
           إنشاء حساب جديد
         </h1>

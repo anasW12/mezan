@@ -180,7 +180,7 @@ export function NewSaleForm({
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
           {isEdit
             ? `تعديل فاتورة بيع ${initialData?.invoiceNumber ?? ""}`
             : "فاتورة بيع جديدة"}
@@ -194,7 +194,7 @@ export function NewSaleForm({
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8"
+        className="space-y-6 rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6 lg:p-8"
       >
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -205,7 +205,7 @@ export function NewSaleForm({
               type="button"
               onClick={() => setPaymentStatus("PAID")}
               className={cn(
-                "rounded-md py-2 text-sm font-medium transition-colors",
+                "rounded-md px-2 py-2.5 text-xs font-medium transition-colors sm:text-sm",
                 paymentStatus === "PAID"
                   ? "bg-white text-emerald-700 shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
@@ -217,7 +217,7 @@ export function NewSaleForm({
               type="button"
               onClick={() => setPaymentStatus("PENDING_COLLECTION")}
               className={cn(
-                "rounded-md py-2 text-sm font-medium transition-colors",
+                "rounded-md px-2 py-2.5 text-xs font-medium transition-colors sm:text-sm",
                 paymentStatus === "PENDING_COLLECTION"
                   ? "bg-white text-amber-700 shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
@@ -307,76 +307,91 @@ export function NewSaleForm({
             {lines.map((line, idx) => (
               <div
                 key={line.id}
-                className="grid grid-cols-1 gap-3 sm:grid-cols-12"
+                className="grid grid-cols-12 gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 sm:gap-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
               >
-                <select
-                  value={line.productId}
-                  onChange={(e) => {
-                    const selected = products.find(
-                      (p) => p.id === e.target.value
-                    );
-                    setLines((prev) =>
-                      prev.map((item, i) =>
-                        i === idx
-                          ? {
-                              ...item,
-                              productId: e.target.value,
-                              unitPrice: selected
-                                ? selected.sellingPrice
-                                : item.unitPrice,
-                            }
-                          : item
-                      )
-                    );
-                  }}
-                  className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-5"
-                >
-                  {products.map((p) => {
-                    const availableStock =
-                      p.stockQuantity +
-                      (restoredQtyByProduct.get(p.id) ?? 0);
-                    return (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (متاح: {formatNumber(availableStock)})
-                      </option>
-                    );
-                  })}
-                </select>
+                <div className="col-span-12 sm:col-span-5">
+                  <label className="mb-1 block text-xs font-medium text-slate-600 sm:hidden">
+                    المنتج (المتاح)
+                  </label>
+                  <select
+                    value={line.productId}
+                    onChange={(e) => {
+                      const selected = products.find(
+                        (p) => p.id === e.target.value
+                      );
+                      setLines((prev) =>
+                        prev.map((item, i) =>
+                          i === idx
+                            ? {
+                                ...item,
+                                productId: e.target.value,
+                                unitPrice: selected
+                                  ? selected.sellingPrice
+                                  : item.unitPrice,
+                              }
+                            : item
+                        )
+                      );
+                    }}
+                    className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    {products.map((p) => {
+                      const availableStock =
+                        p.stockQuantity +
+                        (restoredQtyByProduct.get(p.id) ?? 0);
+                      return (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (متاح: {formatNumber(availableStock)})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
 
-                <input
-                  type="number"
-                  min="1"
-                  value={line.quantity}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setLines((prev) =>
-                      prev.map((item, i) =>
-                        i === idx ? { ...item, quantity: val } : item
-                      )
-                    );
-                  }}
-                  placeholder="الكمية"
-                  className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
-                />
+                <div className="col-span-5 sm:col-span-3">
+                  <label className="mb-1 block text-xs font-medium text-slate-600 sm:hidden">
+                    الكمية
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={line.quantity}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setLines((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, quantity: val } : item
+                        )
+                      );
+                    }}
+                    placeholder="الكمية"
+                    className="tabular-nums h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
 
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={line.unitPrice}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setLines((prev) =>
-                      prev.map((item, i) =>
-                        i === idx ? { ...item, unitPrice: val } : item
-                      )
-                    );
-                  }}
-                  placeholder="سعر البيع"
-                  className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
-                />
+                <div className="col-span-5 sm:col-span-3">
+                  <label className="mb-1 block text-xs font-medium text-slate-600 sm:hidden">
+                    سعر البيع (ج.م)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={line.unitPrice}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setLines((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, unitPrice: val } : item
+                        )
+                      );
+                    }}
+                    placeholder="سعر البيع"
+                    className="tabular-nums h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
 
-                <div className="flex items-center justify-end sm:col-span-1">
+                <div className="col-span-2 flex items-end justify-end sm:col-span-1">
                   <button
                     type="button"
                     disabled={lines.length === 1}
@@ -418,8 +433,8 @@ export function NewSaleForm({
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
               الضريبة (اختياري)
             </label>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
                 <button
                   type="button"
                   onClick={() => setTaxType("PERCENTAGE")}
@@ -445,7 +460,7 @@ export function NewSaleForm({
                   مبلغ ثابت
                 </button>
               </div>
-              <div className="relative flex-1 min-w-[120px]">
+              <div className="relative min-w-[120px] flex-1">
                 <input
                   type="number"
                   min="0"
@@ -477,9 +492,9 @@ export function NewSaleForm({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
+        <div className="flex flex-col items-stretch justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-4 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
               <span>
                 المجموع الفرعي:{" "}
                 <span className="tabular-nums font-medium text-slate-700">
@@ -497,7 +512,7 @@ export function NewSaleForm({
                 </span>
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-start">
               <span className="text-sm font-medium text-slate-600">
                 الإجمالي النهائي للفاتورة:
               </span>
@@ -505,11 +520,11 @@ export function NewSaleForm({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+              className="min-h-[44px] rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
             >
               {isPending
                 ? "جاري الحفظ..."
@@ -519,7 +534,7 @@ export function NewSaleForm({
             </button>
             <Link
               href="/sales"
-              className="rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               إلغاء
             </Link>

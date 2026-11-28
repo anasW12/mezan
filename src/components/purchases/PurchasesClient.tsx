@@ -56,16 +56,18 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">المشتريات</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+            المشتريات
+          </h2>
           <p className="mt-1 text-sm text-slate-500">
             سجل فواتير الشراء وتحديث متوسط تكلفة البضاعة تلقائياً.
           </p>
         </div>
         <Link
           href="/purchases/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           <span>فاتورة شراء جديدة</span>
@@ -94,90 +96,143 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
             actionHref="/purchases/new"
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50/80">
-                <tr>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    رقم الفاتورة
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    التاريخ
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    المورد
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الأصناف
-                  </th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
-                    الخزينة
-                  </th>
-                  <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
-                    الإجمالي
-                  </th>
-                  <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv) => (
-                  <tr
-                    key={inv.id}
-                    className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
-                  >
-                    <td className="tabular-nums px-6 py-4 text-sm font-semibold text-slate-900">
-                      <span dir="ltr" className="inline-block">
+          <>
+            <div className="divide-y divide-slate-100 md:hidden">
+              {filtered.map((inv) => (
+                <div key={inv.id} className="space-y-2.5 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span
+                        dir="ltr"
+                        className="tabular-nums inline-block text-sm font-bold text-slate-900"
+                      >
                         {inv.invoiceNumber}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {inv.date}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-700">
-                      {inv.supplierName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {inv.itemsSummary}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {inv.safeName}
-                    </td>
-                    <td className="px-6 py-4 text-end text-sm">
-                      <CurrencyDisplay amount={inv.totalAmount} />
-                    </td>
-                    <td className="px-6 py-4 text-end">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/purchases/${inv.id}/edit`}
-                          prefetch={false}
-                          aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          <span>تعديل</span>
-                        </Link>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => setDeleteTarget(inv)}
-                          aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>حذف</span>
-                        </button>
-                      </div>
-                    </td>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {inv.date} • {inv.safeName}
+                      </p>
+                    </div>
+                    <CurrencyDisplay
+                      amount={inv.totalAmount}
+                      className="text-sm font-bold"
+                    />
+                  </div>
+
+                  <p className="text-sm text-slate-700">{inv.itemsSummary}</p>
+                  <p className="text-xs text-slate-500">
+                    المورد: {inv.supplierName}
+                  </p>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Link
+                      href={`/purchases/${inv.id}/edit`}
+                      prefetch={false}
+                      aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>تعديل</span>
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => setDeleteTarget(inv)}
+                      aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50/40 px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>حذف</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full">
+                <thead className="bg-slate-50/80">
+                  <tr>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      رقم الفاتورة
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      التاريخ
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      المورد
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الأصناف
+                    </th>
+                    <th className="px-6 py-3.5 text-start text-xs font-semibold text-slate-500">
+                      الخزينة
+                    </th>
+                    <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
+                      الإجمالي
+                    </th>
+                    <th className="px-6 py-3.5 text-end text-xs font-semibold text-slate-500">
+                      الإجراءات
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map((inv) => (
+                    <tr
+                      key={inv.id}
+                      className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
+                    >
+                      <td className="tabular-nums px-6 py-4 text-sm font-semibold text-slate-900">
+                        <span dir="ltr" className="inline-block">
+                          {inv.invoiceNumber}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {inv.date}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-700">
+                        {inv.supplierName}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {inv.itemsSummary}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {inv.safeName}
+                      </td>
+                      <td className="px-6 py-4 text-end text-sm">
+                        <CurrencyDisplay amount={inv.totalAmount} />
+                      </td>
+                      <td className="px-6 py-4 text-end">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/purchases/${inv.id}/edit`}
+                            prefetch={false}
+                            aria-label={`تعديل فاتورة ${inv.invoiceNumber}`}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>تعديل</span>
+                          </Link>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setDeleteTarget(inv)}
+                            aria-label={`حذف فاتورة ${inv.invoiceNumber}`}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>حذف</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 text-sm text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3.5 text-sm text-slate-500 sm:px-6 sm:py-4">
           <span>عرض {formatNumber(filtered.length)} فواتير شراء</span>
         </div>
       </div>
