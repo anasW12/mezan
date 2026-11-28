@@ -114,7 +114,8 @@ export function InventoryClient({ products }: InventoryClientProps) {
         <div className="flex items-center gap-2.5">
           <Info className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>
-            تُضاف الأصناف والكميات تلقائياً عبر تسجيل فواتير المشتريات
+            تُضاف الأصناف وتُحدّث الكميات تلقائياً عبر فواتير المشتريات وتُخصم
+            تلقائياً عند تسجيل المبيعات
           </span>
         </div>
         <Link
@@ -228,7 +229,7 @@ export function InventoryClient({ products }: InventoryClientProps) {
                         <div className="font-medium text-slate-900">
                           {product.name}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div dir="ltr" className="w-fit text-xs text-slate-400">
                           {product.sku}
                         </div>
                       </td>

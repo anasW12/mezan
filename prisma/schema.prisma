@@ -24,6 +24,11 @@ enum PaymentStatus {
   PENDING_COLLECTION
 }
 
+enum TaxType {
+  PERCENTAGE
+  FIXED
+}
+
 enum ActionType {
   PURCHASE_CREATED
   SALE_CREATED
@@ -148,6 +153,11 @@ model SalesInvoice {
   safe          Safe?         @relation(fields: [safeId], references: [id], onDelete: Restrict)
   customerName  String?
   paymentStatus PaymentStatus @default(PAID)
+  subtotal      Decimal       @default(0) @db.Decimal(18, 4)
+  taxType       TaxType       @default(PERCENTAGE)
+  taxValue      Decimal       @default(0) @db.Decimal(18, 4)
+  taxAmount     Decimal       @default(0) @db.Decimal(18, 4)
+  totalAmount   Decimal       @default(0) @db.Decimal(18, 4)
   totalRevenue  Decimal       @db.Decimal(18, 4)
   directCost    Decimal       @default(0) @db.Decimal(18, 4)
   notes         String?

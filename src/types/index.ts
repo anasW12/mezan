@@ -1,4 +1,5 @@
 export type PaymentStatus = "PAID" | "PENDING_COLLECTION";
+export type TaxType = "PERCENTAGE" | "FIXED";
 export type PlanStatus = "TRIAL" | "ACTIVE" | "EXPIRED";
 
 export type TransactionActionType =
@@ -55,15 +56,51 @@ export interface FixedAssetRow {
   purchaseDate: string;
 }
 
+export interface SalesInvoiceDetailItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
 export interface SalesInvoiceRow {
   id: string;
   invoiceNumber: string;
   date: string;
+  invoiceDateInput: string;
   customerName?: string | null;
+  safeName?: string | null;
   itemsSummary: string;
+  items: SalesInvoiceDetailItem[];
   directCost: number;
+  subtotal: number;
+  taxType: TaxType;
+  taxValue: number;
+  taxAmount: number;
   totalAmount: number;
   paymentStatus: PaymentStatus;
+  notes?: string | null;
+}
+
+export interface SalesInvoiceFormInitialData {
+  id: string;
+  invoiceNumber: string;
+  paymentStatus: PaymentStatus;
+  safeId: string | null;
+  customerName: string;
+  directCost: number;
+  taxType: TaxType;
+  taxValue: number;
+  notes: string;
+  invoiceDate: string;
+  totalAmount: number;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
 }
 
 export interface PurchaseInvoiceRow {
@@ -74,6 +111,22 @@ export interface PurchaseInvoiceRow {
   safeName: string;
   itemsSummary: string;
   totalAmount: number;
+}
+
+export interface PurchaseInvoiceFormInitialData {
+  id: string;
+  invoiceNumber: string;
+  safeId: string;
+  supplierName: string;
+  notes: string;
+  invoiceDate: string;
+  totalAmount: number;
+  items: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    unitCost: number;
+  }>;
 }
 
 export interface ExpenseRow {
