@@ -194,7 +194,9 @@ export function SalesClient({ sales }: SalesClientProps) {
                     className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
                   >
                     <td className="tabular-nums whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
-                      {inv.invoiceNumber}
+                      <span dir="ltr" className="inline-block">
+                        {inv.invoiceNumber}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-500">
                       {inv.date}
@@ -326,7 +328,10 @@ export function SalesClient({ sales }: SalesClientProps) {
             <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  تفاصيل فاتورة البيع {previewInvoice.invoiceNumber}
+                  تفاصيل فاتورة البيع{" "}
+                  <span dir="ltr" className="inline-block">
+                    {previewInvoice.invoiceNumber}
+                  </span>
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
                   التاريخ: {previewInvoice.date} • الحالة:{" "}

@@ -128,7 +128,9 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
                     className="border-t border-slate-100 transition-colors hover:bg-slate-50/50"
                   >
                     <td className="tabular-nums px-6 py-4 text-sm font-semibold text-slate-900">
-                      {inv.invoiceNumber}
+                      <span dir="ltr" className="inline-block">
+                        {inv.invoiceNumber}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {inv.date}

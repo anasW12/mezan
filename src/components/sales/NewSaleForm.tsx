@@ -315,10 +315,19 @@ export function NewSaleForm({
                     const selected = products.find(
                       (p) => p.id === e.target.value
                     );
-                    const next = [...lines];
-                    next[idx].productId = e.target.value;
-                    if (selected) next[idx].unitPrice = selected.sellingPrice;
-                    setLines(next);
+                    setLines((prev) =>
+                      prev.map((item, i) =>
+                        i === idx
+                          ? {
+                              ...item,
+                              productId: e.target.value,
+                              unitPrice: selected
+                                ? selected.sellingPrice
+                                : item.unitPrice,
+                            }
+                          : item
+                      )
+                    );
                   }}
                   className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-5"
                 >
@@ -339,9 +348,12 @@ export function NewSaleForm({
                   min="1"
                   value={line.quantity}
                   onChange={(e) => {
-                    const next = [...lines];
-                    next[idx].quantity = Number(e.target.value);
-                    setLines(next);
+                    const val = Number(e.target.value);
+                    setLines((prev) =>
+                      prev.map((item, i) =>
+                        i === idx ? { ...item, quantity: val } : item
+                      )
+                    );
                   }}
                   placeholder="الكمية"
                   className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
@@ -353,9 +365,12 @@ export function NewSaleForm({
                   step="0.01"
                   value={line.unitPrice}
                   onChange={(e) => {
-                    const next = [...lines];
-                    next[idx].unitPrice = Number(e.target.value);
-                    setLines(next);
+                    const val = Number(e.target.value);
+                    setLines((prev) =>
+                      prev.map((item, i) =>
+                        i === idx ? { ...item, unitPrice: val } : item
+                      )
+                    );
                   }}
                   placeholder="سعر البيع"
                   className="tabular-nums h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:col-span-3"
